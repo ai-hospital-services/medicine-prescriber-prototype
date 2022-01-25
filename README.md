@@ -1,1 +1,1 @@
-# medicine-prescriber-poc
+# medicine-prescriber-prototype
