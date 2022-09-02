@@ -2,11 +2,13 @@
 
 import flask
 from flask import request
+from flask_cors import CORS
 
 from . import config
 from . import main as core
 
 app = flask.Flask(__name__)
+CORS(app)
 
 
 @app.route("/")
@@ -68,7 +70,9 @@ def _make_response(result) -> flask.Response:
 def main() -> None:
     """Entry point if called as executable."""
     core.init()
-    app.run(host="0.0.0.0", port=8080, debug=config.DEBUG_MODE)
+    app.run(
+        host="0.0.0.0", port=config.PORT, debug=config.DEBUG_MODE, use_reloader=False
+    )
 
 
 if __name__ == "__main__":

@@ -43,6 +43,7 @@ def init() -> None:
     """Entry point if called as an executable."""
     cli_args = lib.parse_cli_args()
     config.DEBUG_MODE = cli_args.debug_mode
+    config.PORT = cli_args.port
     config.MODEL_FILE = os.environ.get("MODEL_FILE", default=config.MODEL_FILE)
     config.SYMPTOMS_TOKENISER_FILE = os.environ.get(
         "SYMPTOMS_TOKENISER_FILE", default=config.SYMPTOMS_TOKENISER_FILE

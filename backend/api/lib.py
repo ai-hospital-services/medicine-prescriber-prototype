@@ -16,6 +16,7 @@ class CLIArgs:
     """Class for command line interface (cli) arguments."""
 
     debug_mode: bool = None
+    port: int = None
 
 
 def parse_cli_args() -> CLIArgs:
@@ -25,9 +26,11 @@ def parse_cli_args() -> CLIArgs:
     logger.info("Starting parse cli arguments")
     parser = argparse.ArgumentParser(description="CLI arguments")
     parser.add_argument("--debug-mode", help="Enable debug mode logging")
+    parser.add_argument("--port", help="Port number to run on")
     args = parser.parse_args()
-    debug_mode = json.loads(args.debug_mode) if args.debug_mode else False
-    result = CLIArgs(debug_mode=debug_mode)
+    debug_mode = json.loads(args.debug_mode) if args.debug_mode else config.DEBUG_MODE
+    port = args.port if args.port else config.PORT
+    result = CLIArgs(debug_mode=debug_mode, port=port)
     logger.info("Completed parse cli arguments")
 
     return result
@@ -55,14 +58,13 @@ def log_config_settings() -> None:
     logger = get_logger()
 
     logger.info("Starting log config settings in DEBUG mode")
-    logger.debug("DEBUG_MODE=", DEBUG_MODE=config.DEBUG_MODE)
+    logger.debug("", DEBUG_MODE=config.DEBUG_MODE)
+    logger.debug("", PORT=config.PORT)
     logger.debug(
-        "SYMPTOMS_TOKENISER_FILE=",
+        "",
         SYMPTOMS_TOKENISER_FILE=config.SYMPTOMS_TOKENISER_FILE,
     )
-    logger.debug(
-        "CAUSES_TOKENISER_FILE=", CAUSES_TOKENISER_FILE=config.CAUSES_TOKENISER_FILE
-    )
-    logger.debug("MODEL_FILE=", MODEL_FILE=config.MODEL_FILE)
-    logger.debug("MONGODB_URL=", MONGODB_URL=config.MONGODB_URL)
+    logger.debug("", CAUSES_TOKENISER_FILE=config.CAUSES_TOKENISER_FILE)
+    logger.debug("", MODEL_FILE=config.MODEL_FILE)
+    logger.debug("", MONGODB_URL=config.MONGODB_URL)
     logger.info("Completed log config settings in DEBUG mode")

@@ -1,12 +1,11 @@
 FROM python:3.9.13-slim-buster
 
-RUN apt-get update && apt-get upgrade
-
 WORKDIR /backend
 COPY . api
 
-RUN pip install --upgrade pip
-RUN pip install -r ./api/requirements.txt
+RUN apt-get update && apt-get upgrade && \
+    pip install --upgrade pip && \
+    pip install -r ./api/requirements.txt
 
 ARG FLASK_DEBUG="1"
 ENV FLASK_DEBUG=${FLASK_DEBUG}

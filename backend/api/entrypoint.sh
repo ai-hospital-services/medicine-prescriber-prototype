@@ -12,8 +12,7 @@ function api() {
     FLASK_DEBUG=${FLASK_DEBUG} python -m api.app "$@"
 }
 function migrate() {
-    # TODO: migrate
-    echo ""
+    mongodb-migrate --url ${MONGODB_URL} --migrations "api/migrations"
 }
 
 mode=$1

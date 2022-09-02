@@ -64,7 +64,7 @@ pylint .
 cd backend
 
 # argument --debug-mode = true or false (default) to enable debug mode logging
-FLASK_DEBUG=1 python -m api.app --debug-mode true
+FLASK_DEBUG=1 python -m api.app --debug-mode true --port 8080
 
 # curl to hit backend api
 curl http://localhost:8080
@@ -85,7 +85,7 @@ docker build \
 	-t ai-hospital-services:api --platform linux/amd64 .
 
 # run docker image
-docker run -it -p 8080:8080 --name backendapi --platform linux/amd64 ai-hospital-services:api api --debug-mode true
+docker run -it -p 8080:80 --name backendapi --platform linux/amd64 ai-hospital-services:api api --debug-mode true --port 80
 
 ### Usage
 

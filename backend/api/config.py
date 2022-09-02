@@ -2,6 +2,9 @@
 
 DEBUG_MODE = False
 
+# flask
+PORT = 80
+
 # machine learning
 MODEL_FILE = "api/data/model.h5"
 SYMPTOMS_TOKENISER_FILE = "api/data/symptoms_tokeniser.json"

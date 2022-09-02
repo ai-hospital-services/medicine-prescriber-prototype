@@ -253,7 +253,7 @@ class _SymptomsPageState extends State<SymptomsPage> {
                           });
                         }
                       : null,
-                  style: ElevatedButton.styleFrom(primary: Colors.blue[400]),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[400]),
                   child: const Text("Predict Cause",
                       style: TextStyle(fontWeight: FontWeight.bold)),
                 )
@@ -361,7 +361,7 @@ class _SymptomsPageState extends State<SymptomsPage> {
                           });
                         }
                       : null,
-                  style: ElevatedButton.styleFrom(primary: Colors.red[300]),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red[300]),
                   child: const Text("Read Drug",
                       style: TextStyle(fontWeight: FontWeight.bold)),
                 )

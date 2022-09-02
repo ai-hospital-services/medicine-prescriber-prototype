@@ -95,7 +95,10 @@ class Data {
   }
 
   Future<List<dynamic>> _httpGet(String url) async {
-    final response = await http.get(Uri.parse(url));
+    final response = await http.get(Uri.parse(url), headers: {
+      "Accept": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    });
     if (response.statusCode == 200) {
       final List<dynamic> jsonList = jsonDecode(response.body) as List<dynamic>;
       return jsonList;
@@ -106,7 +109,12 @@ class Data {
   }
 
   Future<List<dynamic>> _httpPost(String url, Map<String, String> body) async {
-    final response = await http.post(Uri.parse(url), body: body);
+    final response = await http.post(Uri.parse(url),
+        headers: {
+          "Accept": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        },
+        body: body);
     if (response.statusCode == 200) {
       final List<dynamic> jsonList = jsonDecode(response.body) as List<dynamic>;
       return jsonList;
