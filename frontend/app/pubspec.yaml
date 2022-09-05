@@ -38,6 +38,7 @@ dependencies:
   http: ^0.13.5
   objectid: ^2.1.0
   change_case: ^1.0.2
+  yaml: ^3.1.1
 
 dev_dependencies:
   flutter_test:
@@ -62,7 +63,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
+  assets:
+    - assets/config.yaml
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

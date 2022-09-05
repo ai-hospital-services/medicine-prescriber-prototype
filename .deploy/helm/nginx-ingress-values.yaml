@@ -1,0 +1,13 @@
+controller:
+  service:
+    externalTrafficPolicy: "Local"
+    loadBalancerIP: "<LOAD BALANCER IP>"
+  nodeSelector: {"kubernetes.io/arch": "arm64"}
+  tolerations: [{key: "kubernetes.io/arch", value: "arm64"}]
+  admissionWebhooks:
+    patch:
+      nodeSelector: {"kubernetes.io/arch": "arm64"}
+      tolerations: [{key: "kubernetes.io/arch", value: "arm64"}]
+defaultBackend:
+  nodeSelector: {"kubernetes.io/arch": "arm64"}
+  tolerations: [{key: "kubernetes.io/arch", value: "arm64"}]

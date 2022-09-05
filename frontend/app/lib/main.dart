@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'config.dart';
 import 'data.dart';
 import 'symptoms_page.dart';
 
-void main() {
-  runApp(const App());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Config().loadAsset();
+  runApp(App());
 }
 
 class App extends StatelessWidget {
   final Data _data;
 
-  const App({super.key}) : _data = const Data();
+  App({super.key}) : _data = Data();
 
   @override
   Widget build(BuildContext context) {

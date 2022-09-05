@@ -13,7 +13,7 @@
             "cwd": "${workspaceFolder}/backend",
             "env": {
                 "FLASK_DEBUG": "1",
-                "MONGODB_URL": "mongodb://user:password@localhost:27017/ai_hospital_services?authMechanism=DEFAULT&authSource=ai_hospital_services"
+                // "MONGODB_URL": "mongodb://user:password@localhost:27017/ai_hospital_services?authMechanism=DEFAULT&authSource=ai_hospital_services"
             },
             "args": [
                 "--debug-mode=true",

@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:objectid/objectid.dart';
+import 'config.dart';
 
 class Data {
-  final String backendAPIURL;
+  late final String backendAPIURL;
 
-  const Data({this.backendAPIURL = "http://localhost:8080"});
+  Data() {
+    backendAPIURL = Config.map["backendAPIURL"];
+  }
 
   Future<List<SubjectiveSymptom>> getSubjectiveSymptomList() async {
     final List<dynamic> jsonList =

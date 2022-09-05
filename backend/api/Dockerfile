@@ -1,9 +1,9 @@
-FROM python:3.9.13-slim-buster
+FROM --platform=linux/amd64 python:3.9.13-slim-buster
 
 WORKDIR /backend
 COPY . api
 
-RUN apt-get update && apt-get upgrade && \
+RUN apt-get update && apt-get upgrade -y && \
     pip install --upgrade pip && \
     pip install -r ./api/requirements.txt
 
@@ -14,4 +14,4 @@ ARG MONGODB_URL="mongodb://localhost:27017/"
 ENV MONGODB_URL=${DB_CONNECTION_URL}
 
 ENTRYPOINT [ "./api/entrypoint.sh" ]
-CMD ["migrateThenApi", "--debug-mode", "false"]
+CMD ["migrateThenApi"]
