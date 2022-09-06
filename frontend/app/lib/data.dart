@@ -1,32 +1,37 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:objectid/objectid.dart';
 import 'config.dart';
+import 'lib.dart';
 
 class Data {
-  late final String backendAPIURL;
+  late final String _backendAPIURL;
+  String? _accessToken;
 
-  Data() {
-    backendAPIURL = Config.map["backendAPIURL"];
+  Data() : _backendAPIURL = Config.map["backendAPIURL"];
+
+  set({required String? accessToken}) {
+    _accessToken = accessToken;
   }
 
   Future<List<SubjectiveSymptom>> getSubjectiveSymptomList() async {
-    final List<dynamic> jsonList =
-        await _httpGet("$backendAPIURL/read-all-subjective-symptoms");
-    List<SubjectiveSymptom> subjectiveSymptomList = [];
-    for (var json in jsonList) {
-      subjectiveSymptomList.add(SubjectiveSymptom.fromJson(json));
-    }
+    final response = await Lib.httpGet(
+        url: "$_backendAPIURL/read-all-subjective-symptoms",
+        accessToken: _accessToken);
+    final jsonList = jsonDecode(response) as List<dynamic>;
+    final subjectiveSymptomList = <SubjectiveSymptom>[
+      ...jsonList.map((item) => SubjectiveSymptom.fromJson(item))
+    ];
     return subjectiveSymptomList;
   }
 
   Future<List<ObjectiveSymptom>> getObjectiveSymptomList() async {
-    final List<dynamic> jsonList =
-        await _httpGet("$backendAPIURL/read-all-objective-symptoms");
-    List<ObjectiveSymptom> objectiveSymptomList = [];
-    for (var json in jsonList) {
-      objectiveSymptomList.add(ObjectiveSymptom.fromJson(json));
-    }
+    final response = await Lib.httpGet(
+        url: "$_backendAPIURL/read-all-objective-symptoms",
+        accessToken: _accessToken);
+    final jsonList = jsonDecode(response) as List<dynamic>;
+    final objectiveSymptomList = <ObjectiveSymptom>[
+      ...jsonList.map((item) => ObjectiveSymptom.fromJson(item))
+    ];
     return objectiveSymptomList;
   }
 
@@ -35,12 +40,12 @@ class Data {
   }
 
   Future<List<Etiology>> getEtiologyList() async {
-    final List<dynamic> jsonList =
-        await _httpGet("$backendAPIURL/read-all-etiologies");
-    List<Etiology> etiologyList = [];
-    for (var json in jsonList) {
-      etiologyList.add(Etiology.fromJson(json));
-    }
+    final response = await Lib.httpGet(
+        url: "$_backendAPIURL/read-all-etiologies", accessToken: _accessToken);
+    final jsonList = jsonDecode(response) as List<dynamic>;
+    final etiologyList = <Etiology>[
+      ...jsonList.map((item) => Etiology.fromJson(item))
+    ];
     return etiologyList;
   }
 
@@ -55,12 +60,14 @@ class Data {
           objectiveSymptomList.map((item) => item.symptom).join(";"),
       "gender": gender.name,
     };
-    final List<dynamic> jsonList =
-        await _httpPost("$backendAPIURL/predict-cause", body);
-    List<PredictedCause> predictedCauseList = [];
-    for (var json in jsonList) {
-      predictedCauseList.add(PredictedCause.fromJson(json));
-    }
+    final response = await Lib.httpPost(
+        url: "$_backendAPIURL/predict-cause",
+        body: body,
+        accessToken: _accessToken);
+    final jsonList = jsonDecode(response) as List<dynamic>;
+    final predictedCauseList = <PredictedCause>[
+      ...jsonList.map((item) => PredictedCause.fromJson(item))
+    ];
     return predictedCauseList;
   }
 
@@ -68,63 +75,33 @@ class Data {
       List<PredictedCause> predictedCauseList,
       List<SubjectiveSymptom> subjectiveSymptomList,
       List<Etiology> etiologyList) {
-    List<PredictedCauseWithEtiology> result = [];
-    for (var predictedCause in predictedCauseList) {
-      List<String> split = predictedCause.cause.split("|");
-      result.add(PredictedCauseWithEtiology(
-          split[0],
-          split[1],
-          predictedCause.probability,
-          etiologyList
-              .firstWhere((e) =>
-                  e.cause == split[1] &&
-                  subjectiveSymptomList
-                          .firstWhere((s) => e.subjectiveSymptomId == s.id)
-                          .symptom ==
-                      split[0])
-              .etiology));
-    }
+    final result = <PredictedCauseWithEtiology>[
+      ...predictedCauseList.map((item) {
+        var split = item.cause.split("|");
+        return PredictedCauseWithEtiology(
+            split[0],
+            split[1],
+            item.probability,
+            etiologyList
+                .firstWhere((e) =>
+                    e.cause == split[1] &&
+                    subjectiveSymptomList
+                            .firstWhere((s) => e.subjectiveSymptomId == s.id)
+                            .symptom ==
+                        split[0])
+                .etiology);
+      })
+    ];
     return result;
   }
 
   Future<List<Drug>> getDrugList(ObjectId etiologyId) async {
-    final List<dynamic> jsonList =
-        await _httpGet("$backendAPIURL/read-drugs/$etiologyId");
-    List<Drug> drugList = [];
-    for (var json in jsonList) {
-      drugList.add(Drug.fromJson(json));
-    }
+    final response = await Lib.httpGet(
+        url: "$_backendAPIURL/read-drugs/$etiologyId",
+        accessToken: _accessToken);
+    final jsonList = jsonDecode(response) as List<dynamic>;
+    final drugList = <Drug>[...jsonList.map((item) => Drug.fromJson(item))];
     return drugList;
-  }
-
-  Future<List<dynamic>> _httpGet(String url) async {
-    final response = await http.get(Uri.parse(url), headers: {
-      "Accept": "application/json",
-      "Access-Control-Allow-Origin": "*"
-    });
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonList = jsonDecode(response.body) as List<dynamic>;
-      return jsonList;
-    } else {
-      throw Exception(
-          "Error calling backend api with status code: ${response.statusCode}");
-    }
-  }
-
-  Future<List<dynamic>> _httpPost(String url, Map<String, String> body) async {
-    final response = await http.post(Uri.parse(url),
-        headers: {
-          "Accept": "application/json",
-          "Access-Control-Allow-Origin": "*"
-        },
-        body: body);
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonList = jsonDecode(response.body) as List<dynamic>;
-      return jsonList;
-    } else {
-      throw Exception(
-          "Error calling backend api with status code: ${response.statusCode}");
-    }
   }
 }
 

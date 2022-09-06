@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Flutter on Chrome",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "cwd": "${workspaceFolder}/frontend/app",
+            "args": [
+                "-d",
+                "chrome",
+                "--web-port",
+                "9090"
+            ]
+        },
+        {
             "name": "Python: api",
             "type": "python",
             "request": "launch",
@@ -13,7 +26,10 @@
             "cwd": "${workspaceFolder}/backend",
             "env": {
                 "FLASK_DEBUG": "1",
-                // "MONGODB_URL": "mongodb://user:password@localhost:27017/ai_hospital_services?authMechanism=DEFAULT&authSource=ai_hospital_services"
+                // "MONGODB_URL": "mongodb://<USER>:<PASSWORD>@localhost:27017/ai_hospital_services?authMechanism=DEFAULT&authSource=ai_hospital_services",
+                "TENANT_DOMAIN": "<TENANT DOMAIN>",
+                "CLIENT_ID": "<CLIENT ID>",
+                "CLIENT_SECRET": "<CLIENT SECRET>"
             },
             "args": [
                 "--debug-mode=true",

@@ -66,5 +66,15 @@ def log_config_settings() -> None:
     )
     logger.debug("", CAUSES_TOKENISER_FILE=config.CAUSES_TOKENISER_FILE)
     logger.debug("", MODEL_FILE=config.MODEL_FILE)
-    logger.debug("", MONGODB_URL=config.MONGODB_URL)
+    logger.debug("", WEB_REQUEST_TIMEOUT=config.WEB_REQUEST_TIMEOUT)
+    logger.debug("", CACHE_TIMEOUT=config.CACHE_TIMEOUT)
+    logger.debug("", TENANT_DOMAIN=config.TENANT_DOMAIN)
+    logger.debug(
+        "",
+        TENANT_OPENID_CONFIGURATION_CACHE_KEY=config.TENANT_OPENID_CONFIGURATION_CACHE_KEY,
+    )
+    logger.debug("", AUTHORISATION_HEADER_KEY=config.AUTHORISATION_HEADER_KEY)
+    logger.debug("", REDIRECT_URL=config.REDIRECT_URL)
+    logger.debug("", CLIENT_ID=config.CLIENT_ID)
+    logger.debug("", CLIENT_SECRET=config.CLIENT_SECRET)
     logger.info("Completed log config settings in DEBUG mode")

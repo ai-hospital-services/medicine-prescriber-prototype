@@ -5,7 +5,7 @@
 #     libglu1-mesa tar unzip xz-utils zip \
 #     clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
 
-# RUN git clone --depth 1 --branch 3.3.0 https://github.com/flutter/flutter.git && \
+# RUN git clone --depth 1 --branch 3.3.1 https://github.com/flutter/flutter.git && \
 #     export PATH="$PATH:`pwd`/flutter/bin" && flutter config --clear-features && \
 #     flutter config --enable-web --no-enable-linux-desktop --no-enable-macos-desktop \
 #     --no-enable-windows-desktop --no-single-widget-reload-optimization --no-enable-android \
@@ -28,10 +28,6 @@ COPY build/web build/web
 # COPY --from=build build/web build/web
 
 ARG PORT="80"
-ENV PORT=${PORT}
-
-ARG BACKEND_API_URL="http://localhost:8080"
-ENV BACKEND_API_URL=${BACKEND_API_URL}
 
 ENTRYPOINT ["/root/.pub-cache/bin/dhttpd"]
 CMD ["--path", "build/web/", "--host", "0.0.0.0", "--port", ${PORT}]

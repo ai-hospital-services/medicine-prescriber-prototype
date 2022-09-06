@@ -1,33 +1,70 @@
 import 'package:flutter/material.dart';
 import 'config.dart';
+import 'lib.dart';
 import 'data.dart';
+import 'login.dart';
 import 'symptoms_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Config().loadAsset();
-  runApp(App());
+  await Config().initDone;
+  runApp(const App());
 }
 
-class App extends StatelessWidget {
-  final Data _data;
+class App extends StatefulWidget {
+  const App({super.key});
 
-  App({super.key}) : _data = Data();
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  late final Data _data;
+  late bool _loginFlag;
+
+  @override
+  void initState() {
+    super.initState();
+    Lib.setInvalidLoginState = _setInvalidLoginState;
+    _data = Data();
+    _loginFlag = false;
+  }
+
+  void _setValidLoginState({required String accessToken}) {
+    if (accessToken.isEmpty) return;
+    _data.set(accessToken: accessToken);
+    setState(() {
+      _loginFlag = true;
+    });
+  }
+
+  void _setInvalidLoginState() {
+    _data.set(accessToken: null);
+    setState(() {
+      _loginFlag = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "AI-HOSPITAL.SERVICES",
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: SymptomsPage(
-        getSubjectiveSymptomList: _data.getSubjectiveSymptomList(),
-        getObjectiveSymptomList: _data.getObjectiveSymptomList(),
-        getGenderList: _data.getGenderList(),
-        getEtiologyList: _data.getEtiologyList(),
-        predictCause: _data.predictCause,
-        mapPredictCauseWithEtiology: _data.mapPredictCauseWithEtiology,
-        getDrugList: _data.getDrugList,
-      ),
+      home: (!_loginFlag)
+          ?
+          // if user is not logged in
+          Login(setValidLoginState: _setValidLoginState)
+          :
+          // once user is logged in
+          SymptomsPage(
+              getSubjectiveSymptomList: _data.getSubjectiveSymptomList(),
+              getObjectiveSymptomList: _data.getObjectiveSymptomList(),
+              getGenderList: _data.getGenderList(),
+              getEtiologyList: _data.getEtiologyList(),
+              predictCause: _data.predictCause,
+              mapPredictCauseWithEtiology: _data.mapPredictCauseWithEtiology,
+              getDrugList: _data.getDrugList,
+            ),
     );
   }
 }

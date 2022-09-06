@@ -71,3 +71,14 @@ Get letsencrypt server
 {{- "https://acme-staging-v02.api.letsencrypt.org/directory" }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create the name of the letsencrypt issuer
+*/}}
+{{- define "letsencrypt.issuerName" -}}
+{{- if eq .Values.letsencrypt.mode "production" }}
+{{- .Values.letsencrypt.issuerPrefix }}{{- include "frontend-app.name" . }}-letsencrypt-production
+{{- else }}
+{{- .Values.letsencrypt.issuerPrefix }}{{- include "frontend-app.name" . }}-letsencrypt-staging
+{{- end }}
+{{- end }}

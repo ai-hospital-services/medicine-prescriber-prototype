@@ -60,3 +60,25 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Get letsencrypt server
+*/}}
+{{- define "letsencrypt.server" -}}
+{{- if eq .Values.letsencrypt.mode "production" }}
+{{- "https://acme-v02.api.letsencrypt.org/directory" }}
+{{- else }}
+{{- "https://acme-staging-v02.api.letsencrypt.org/directory" }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create the name of the letsencrypt issuer
+*/}}
+{{- define "letsencrypt.issuerName" -}}
+{{- if eq .Values.letsencrypt.mode "production" }}
+{{- .Values.letsencrypt.issuerPrefix }}{{- include "backend-api.name" . }}-letsencrypt-production
+{{- else }}
+{{- .Values.letsencrypt.issuerPrefix }}{{- include "backend-api.name" . }}-letsencrypt-staging
+{{- end }}
+{{- end }}

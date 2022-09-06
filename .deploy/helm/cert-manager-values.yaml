@@ -1,0 +1,12 @@
+installCRDs: true
+tolerations: [{key: "kubernetes.io/arch", value: "arm64"}]
+nodeSelector: {"kubernetes.io/arch": "arm64"}
+webhook:
+  nodeSelector: {"kubernetes.io/arch": "arm64"}
+  tolerations: [{key: "kubernetes.io/arch", value: "arm64"}]
+cainjector:
+  nodeSelector: {"kubernetes.io/arch": "arm64"}
+  tolerations: [{key: "kubernetes.io/arch", value: "arm64"}]
+startupapicheck:
+  nodeSelector: {"kubernetes.io/arch": "arm64"}
+  tolerations: [{key: "kubernetes.io/arch", value: "arm64"}]

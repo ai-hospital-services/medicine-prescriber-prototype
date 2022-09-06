@@ -57,6 +57,23 @@ spec:
                 secretKeyRef:
                   key: mongodbURL
                   name: {{ include "backend-api.fullname" . }}
+            - name: TENANT_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  key: tenantDomain
+                  name: {{ include "backend-api.fullname" . }}
+            - name: REDIRECT_URL
+              value: "{{ .Values.config.redirectURL }}"
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: clientID
+                  name: {{ include "backend-api.fullname" . }}
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: clientSecret
+                  name: {{ include "backend-api.fullname" . }}
           args: ["migrateThenApi", "--debug-mode", "{{ .Values.config.debugMode }}", "--port", "{{ .Values.service.port }}"]
       {{- with .Values.nodeSelector }}
       nodeSelector:

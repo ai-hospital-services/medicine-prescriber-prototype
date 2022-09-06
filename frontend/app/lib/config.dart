@@ -2,9 +2,16 @@ import 'package:flutter/services.dart';
 import 'package:yaml/yaml.dart';
 
 class Config {
-  static dynamic map;
+  static late final dynamic map;
+  late final Future _initDone;
 
-  Future<void> loadAsset() async {
+  Config() {
+    _initDone = _init();
+  }
+
+  Future get initDone => _initDone;
+
+  Future _init() async {
     final configString = await rootBundle.loadString("assets/config.yaml");
     Config.map = loadYaml(configString);
   }

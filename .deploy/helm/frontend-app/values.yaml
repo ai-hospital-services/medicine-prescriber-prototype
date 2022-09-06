@@ -8,7 +8,7 @@ image:
   repository: "<CONTAINER REPOSITORY>/<IMAGE>"
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.1.0"
+  tag: "0.2.0"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -48,7 +48,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    cert-manager.io/cluster-issuer: letsencrypt-app
+    cert-manager.io/cluster-issuer: "{{ include \"letsencrypt.issuerName\" . }}"
   hosts:
     - host: app.ai-hospital.services
       paths:
@@ -61,6 +61,7 @@ ingress:
 
 letsencrypt:
   enabled: false
+  issuerPrefix: 
   email: <DOMAIN EMAIL ADDRESS>
   # mode is either "staging" or production
   mode: "staging"
@@ -92,3 +93,8 @@ affinity: {}
 
 config:
   backendAPIURL: "<BACKEND API URL>"
+  authoriseURL: "<AUTHORISE API URL>"
+  redirectURL: "<REDIRECT URL>"
+  audience: "<AUDIENCE>"
+  clientID: "<CLIENT ID>"
+  scopes: ["read:subjective_symptoms", "read:objective_symptoms", "read:etiologies", "read:drugs", "predict:cause"]

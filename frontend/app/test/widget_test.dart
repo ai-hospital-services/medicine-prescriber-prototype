@@ -10,7 +10,7 @@ import 'package:app/main.dart';
 
 void main() {
   testWidgets('All widgets render test', (WidgetTester tester) async {
-    await tester.pumpWidget(App());
+    await tester.pumpWidget(const App());
 
     expect(find.text("Predict Etiology from Symptoms"), findsOneWidget);
     expect(find.text("Select subjective symptoms: "), findsOneWidget);

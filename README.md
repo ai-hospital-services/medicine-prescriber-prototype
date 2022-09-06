@@ -1,7 +1,5 @@
 # medicine-prescriber-prototype
 
-![](media/prototype1-demo-recording-1.gif)
-
 [![Build](https://github.com/ai-hospital-services/medicine-prescriber-prototype/actions/workflows/build.yml/badge.svg)](https://github.com/ai-hospital-services/medicine-prescriber-prototype/actions/workflows/build.yml)
 [![CodeCov](https://codecov.io/gh/ai-hospital-services/medicine-prescriber-prototype/branch/main/graph/badge.svg)](https://codecov.io/gh/ai-hospital-services/medicine-prescriber-prototype)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -11,14 +9,30 @@
 > Medicine prescriber prototype for AI-HOSPITAL.SERVICES
 
 
+![](media/prototype1-demo-recording-1.gif)
+
+Table of Contents:
+- [medicine-prescriber-prototype](#medicine-prescriber-prototype)
+	- [Built With](#built-with)
+	- [Getting Started](#getting-started)
+		- [Prerequisites](#prerequisites)
+		- [Setup backend api](#setup-backend-api)
+		- [Run locally](#run-locally)
+		- [Deployment](#deployment)
+	- [Authors](#authors)
+	- [🤝 Contributing](#-contributing)
+	- [Show your support](#show-your-support)
+	- [Acknowledgments](#acknowledgments)
+	- [📝 License](#-license)
+
 ## Built With
 
 - Flutter v3
-- Python v3.9.13 & Flask v2.2.2
+- Python v3.9.14 & Flask v2.2.2
 - MongoDB v6.0.1
 - Docker
 - Kubernetes & Helm chart
-- Tensorflow v2.9.1
+- Tensorflow v2.10.0
 
 
 ## Getting Started
@@ -79,13 +93,22 @@ cd backend/api
 # build docker image
 # --build-arg FLASK_DEBUG = debug mode for flask - 1 (default) or 0
 # --build-arg MONGODB_URL = mongodb connection url - "mongodb://localhost:27017/" (default)
+# --build-arg TENANT_DOMAIN = oauth2 tenant domain
+# --build-arg REDIRECT_URL = oauth2 redirect url
+# --build-arg TENANT_DOMAIN = oauth2 tenant domain
+# --build-arg CLIENT_ID = oauth2 client id
+# --build-arg CLIENT_SECRET = oauth2 client secret
 docker build \
 	--build-arg FLASK_DEBUG="1" \
 	--build-arg MONGODB_URL="<MONGODB_URL>"
-	-t ai-hospital-services:api --platform linux/amd64 .
+	--build-arg TENANT_DOMAIN="<TENANT DOMAIN>"
+	--build-arg REDIRECT_URL="<REDIRECT URL>"
+	--build-arg CLIENT_ID="<CLIENT ID>"
+	--build-arg CLIENT_SECRET="<CLIENT SECRET>"
+	-t ai-hospital-services:api .
 
 # run docker image
-docker run -it -p 8080:80 --name backendapi --platform linux/amd64 ai-hospital-services:api api --debug-mode true --port 80
+docker run -it -p 8080:80 --name backendapi ai-hospital-services:api api --debug-mode true --port 80
 
 ### Usage
 

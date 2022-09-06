@@ -2,7 +2,7 @@
 
 import os
 
-from . import config, document_db, lib, machine_learning
+from . import config, document_db, lib, machine_learning, oauth2
 
 
 def read_all_subjective_symptoms() -> list[str]:
@@ -39,6 +39,16 @@ def read_drugs(etiology_id) -> list[str]:
     return document_db.read_drugs(etiology_id)
 
 
+def get_access_token(authorisation_code) -> str:
+    """Get access token using authorisation code."""
+    return oauth2.get_access_token(authorisation_code)
+
+
+def validate_access_token(token, claims) -> bool:
+    """Validate access token and verify claims."""
+    return oauth2.validate_access_token(token, claims)
+
+
 def init() -> None:
     """Entry point if called as an executable."""
     cli_args = lib.parse_cli_args()
@@ -61,6 +71,21 @@ def init() -> None:
         "SYMPTOMS_SEQUENCE_MAXLEN", default=config.SYMPTOMS_SEQUENCE_MAXLEN
     )
     config.MONGODB_URL = os.environ.get("MONGODB_URL", default=config.MONGODB_URL)
+    config.WEB_REQUEST_TIMEOUT = os.environ.get(
+        "WEB_REQUEST_TIMEOUT", default=config.WEB_REQUEST_TIMEOUT
+    )
+    config.CACHE_TIMEOUT = os.environ.get("CACHE_TIMEOUT", default=config.CACHE_TIMEOUT)
+    config.TENANT_DOMAIN = os.environ.get("TENANT_DOMAIN", default=config.TENANT_DOMAIN)
+    config.TENANT_OPENID_CONFIGURATION_CACHE_KEY = os.environ.get(
+        "TENANT_OPENID_CONFIGURATION_CACHE_KEY",
+        default=config.TENANT_OPENID_CONFIGURATION_CACHE_KEY,
+    )
+    config.AUTHORISATION_HEADER_KEY = os.environ.get(
+        "AUTHORISATION_HEADER_KEY", default=config.AUTHORISATION_HEADER_KEY
+    )
+    config.REDIRECT_URL = os.environ.get("REDIRECT_URL", default=config.REDIRECT_URL)
+    config.CLIENT_ID = os.environ.get("CLIENT_ID", default=config.CLIENT_ID)
+    config.CLIENT_SECRET = os.environ.get("CLIENT_SECRET", default=config.CLIENT_SECRET)
 
     lib.configure_global_logging_level()
     lib.log_config_settings()
@@ -68,6 +93,7 @@ def init() -> None:
     machine_learning.configure()
     document_db.configure_mongodb_client()
     # mongodb.log_mongodb_status()
+    oauth2.init_cache_state()
 
 
 if __name__ == "__main__":

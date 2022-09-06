@@ -1,8 +1,8 @@
-import 'package:app/data.dart';
 import 'package:flutter/material.dart';
 import 'package:multiple_search_selection/multiple_search_selection.dart';
 import 'package:change_case/change_case.dart';
 import 'package:objectid/objectid.dart';
+import 'data.dart';
 
 class SymptomsPage extends StatefulWidget {
   final Future<List<SubjectiveSymptom>> getSubjectiveSymptomList;
@@ -30,6 +30,7 @@ class SymptomsPage extends StatefulWidget {
 class _SymptomsPageState extends State<SymptomsPage> {
   List<SubjectiveSymptom>? _subjectiveSymptomList;
   List<SubjectiveSymptom>? _selectedSubjectiveSymptomList;
+  List<ObjectiveSymptom>? _objectiveSymptomList;
   List<ObjectiveSymptom>? _selectedObjectiveSymptomList;
   Gender? _selectedGender;
   bool _isPredictCauseButtonActive = false;
@@ -103,9 +104,9 @@ class _SymptomsPageState extends State<SymptomsPage> {
                                 Text("${item.symptom.toSentenceCase()};"),
                           ));
                         } else if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
+                          return Text("Error: ${snapshot.error}");
                         } else {
-                          return const Text("");
+                          return const SizedBox.shrink();
                         }
                     }
                   },
@@ -146,17 +147,24 @@ class _SymptomsPageState extends State<SymptomsPage> {
                             fieldToCheck: (item) => item.symptom,
                             fuzzySearch: FuzzySearch.jaro,
                             items: () {
-                              List<ObjectiveSymptom> items = [];
                               if (_selectedSubjectiveSymptomList != null) {
-                                items = (snapshot.data
+                                List<ObjectiveSymptom> items = (snapshot.data
                                         as List<ObjectiveSymptom>)
                                     .where((o) =>
                                         _selectedSubjectiveSymptomList!.any(
                                             (s) =>
                                                 s.id == o.subjectiveSymptomId))
                                     .toList();
+                                if (items.map((e) => e.symptom).join(";") !=
+                                    _objectiveSymptomList!
+                                        .map((e) => e.symptom)
+                                        .join(";")) {
+                                  _objectiveSymptomList = items;
+                                }
+                              } else {
+                                _objectiveSymptomList = [];
                               }
-                              return items;
+                              return _objectiveSymptomList!;
                             }(),
                             itemBuilder: (item) =>
                                 Text(item.symptom.toSentenceCase()),
@@ -172,9 +180,9 @@ class _SymptomsPageState extends State<SymptomsPage> {
                                 Text("${item.symptom.toSentenceCase()};"),
                           ));
                         } else if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
+                          return Text("Error: ${snapshot.error}");
                         } else {
-                          return const Text("");
+                          return const SizedBox.shrink();
                         }
                     }
                   },
@@ -221,9 +229,9 @@ class _SymptomsPageState extends State<SymptomsPage> {
                             },
                           );
                         } else if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
+                          return Text("Error: ${snapshot.error}");
                         } else {
-                          return const Text("");
+                          return const SizedBox.shrink();
                         }
                     }
                   },
@@ -253,7 +261,8 @@ class _SymptomsPageState extends State<SymptomsPage> {
                           });
                         }
                       : null,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[400]),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[400]),
                   child: const Text("Predict Cause",
                       style: TextStyle(fontWeight: FontWeight.bold)),
                 )
@@ -332,9 +341,9 @@ class _SymptomsPageState extends State<SymptomsPage> {
                             ),
                           ));
                         } else if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
+                          return Text("Error: ${snapshot.error}");
                         } else {
-                          return const Text("");
+                          return const SizedBox.shrink();
                         }
                     }
                   },
@@ -361,7 +370,8 @@ class _SymptomsPageState extends State<SymptomsPage> {
                           });
                         }
                       : null,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red[300]),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red[300]),
                   child: const Text("Read Drug",
                       style: TextStyle(fontWeight: FontWeight.bold)),
                 )
@@ -416,9 +426,9 @@ class _SymptomsPageState extends State<SymptomsPage> {
                             ),
                           ));
                         } else if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
+                          return Text("Error: ${snapshot.error}");
                         } else {
-                          return const Text("");
+                          return const SizedBox.shrink();
                         }
                     }
                   },
