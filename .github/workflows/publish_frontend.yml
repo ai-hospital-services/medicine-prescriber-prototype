@@ -9,7 +9,7 @@ on:
 
 jobs:
   docker:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     # if: github.event.pull_request.merged == true
     permissions:
       contents: "read"
@@ -37,6 +37,6 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: ./backend/api
+          context: ./frontend/app
           push: true
-          tags: asia.gcr.io/ai-hospital-services-prototype/backend-api:test
+          tags: asia.gcr.io/ai-hospital-services-prototype/frontend-app:test
