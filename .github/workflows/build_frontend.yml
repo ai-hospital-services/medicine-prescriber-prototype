@@ -1,0 +1,13 @@
+name: build_frontend
+
+on: 
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  python:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
