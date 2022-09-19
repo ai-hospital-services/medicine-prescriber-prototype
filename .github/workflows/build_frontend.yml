@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  python:
-    runs-on: self-hosted
+  flutter:
+    runs-on: ["self-hosted", "Linux", "ARM64"]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
