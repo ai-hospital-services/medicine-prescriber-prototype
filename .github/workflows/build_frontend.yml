@@ -7,7 +7,7 @@ on:
 
 jobs:
   flutter:
-    runs-on: ["self-hosted", "Linux", "ARM64"]
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v3
