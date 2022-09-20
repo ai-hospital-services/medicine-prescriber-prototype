@@ -4,13 +4,13 @@ on:
   pull_request:
     branches:
       - main
-    # types:
-    #   - closed
+    types:
+      - closed
 
 jobs:
   docker:
     runs-on: [self-hosted, linux, arm64]
-    # if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
     permissions:
       contents: "read"
       id-token: "write"
@@ -39,4 +39,4 @@ jobs:
         with:
           context: ./backend/api
           push: true
-          tags: asia.gcr.io/ai-hospital-services-prototype/backend-api:test
+          tags: asia.gcr.io/ai-hospital-services-prototype/backend-api:0.3.0
