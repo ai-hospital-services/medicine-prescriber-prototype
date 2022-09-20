@@ -1,0 +1,8 @@
+.DS_Store
+Dockerfile
+__pycache__
+.dockerignore
+.gitignore
+venv
+requirements_dev.txt
+data

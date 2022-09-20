@@ -1,0 +1,15 @@
+name: build_frontend
+
+on: 
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  flutter:
+    runs-on: [self-hosted, linux, arm64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build web
+        run: cd frontend/app && flutter clean && flutter build web

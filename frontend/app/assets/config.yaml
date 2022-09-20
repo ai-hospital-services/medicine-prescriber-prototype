@@ -1,0 +1,11 @@
+backendAPIURL: "http://localhost:8080"
+authoriseURL: "https://<TENANT_DOMAIN>/authorize"
+redirectURL: "http://localhost:9090/auth.html"
+audience: "<AUDIENCE>"
+clientID: "<CLIENT ID>"
+scopes:
+  - "read:subjective_symptoms"
+  - "read:objective_symptoms"
+  - "read:etiologies"
+  - "read:drugs"
+  - "predict:cause"

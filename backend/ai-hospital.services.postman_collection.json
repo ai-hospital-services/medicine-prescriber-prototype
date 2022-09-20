@@ -1,0 +1,325 @@
+{
+	"info": {
+		"_postman_id": "f77ffa22-67f1-4f3c-8a7a-fa94ff0a413b",
+		"name": "ai-hospital.services",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "326415"
+	},
+	"item": [
+		{
+			"name": "localhost:8080/",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Access-Control-Allow-Origin",
+						"value": "*",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/get-access-token/<authorisation_code>",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Access-Control-Allow-Origin",
+						"value": "*",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/get-access-token/{{authorisation_code}}",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"get-access-token",
+						"{{authorisation_code}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/validate-access-token/<asserted_claims>",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Access-Control-Allow-Origin",
+						"value": "*",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/validate-access-token/read%3Adrugs%20predict%3Acause",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"validate-access-token",
+						"read%3Adrugs%20predict%3Acause"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/read-all-subjective-symptoms",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Access-Control-Allow-Origin",
+						"value": "*",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/read-all-subjective-symptoms",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"read-all-subjective-symptoms"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/read-all-objective-symptoms",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Access-Control-Allow-Origin",
+						"value": "*",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/read-all-objective-symptoms",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"read-all-objective-symptoms"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/predict-cause",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Access-Control-Allow-Origin",
+						"value": "*",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "subjective_symptoms",
+							"value": "vomiting",
+							"type": "text"
+						},
+						{
+							"key": "objective_symptoms",
+							"value": "feeling nausea",
+							"type": "text"
+						},
+						{
+							"key": "gender",
+							"value": "female",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:8080/predict-cause",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"predict-cause"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/read-all-etiologies",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Access-Control-Allow-Origin",
+						"value": "*",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/read-all-etiologies",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"read-all-etiologies"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/read-etiology/<subjective_symptom>/<cause>",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Access-Control-Allow-Origin",
+						"value": "*",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/read-etiology/63083e7c5b96e72df489b67d/motion%20sicknesses",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"read-etiology",
+						"63083e7c5b96e72df489b67d",
+						"motion%20sicknesses"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/read-drugs/<etiology_id>",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Access-Control-Allow-Origin",
+						"value": "*",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/read-drugs/630840445b96e72df489b6a7",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"read-drugs",
+						"630840445b96e72df489b6a7"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
