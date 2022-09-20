@@ -1,0 +1,14 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: medicine-prescriber-prototype
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  ref:
+    branch: main
+  secretRef:
+    name: medicine-prescriber-prototype-auth
+  url: ssh://git@github.com/ai-hospital-services/medicine-prescriber-prototype
+

@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: backend-test
+generatorOptions:
+  disableNameSuffixHash: true
+secretGenerator:
+  - name: backend-api-test-file
+    files:
+      - data/causes_tokeniser.json
+      - data/model.h5
+      - data/symptoms_tokeniser.json
+resources:
+  - namespace.yaml

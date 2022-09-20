@@ -77,8 +77,8 @@ Create the name of the letsencrypt issuer
 */}}
 {{- define "letsencrypt.issuerName" -}}
 {{- if eq .Values.letsencrypt.mode "production" }}
-{{- .Values.letsencrypt.issuerPrefix }}{{- include "frontend-app.name" . }}-letsencrypt-production
+{{- include "frontend-app.name" . }}{{- .Values.letsencrypt.issuerSuffix }}-letsencrypt-production
 {{- else }}
-{{- .Values.letsencrypt.issuerPrefix }}{{- include "frontend-app.name" . }}-letsencrypt-staging
+{{- include "frontend-app.name" . }}{{- .Values.letsencrypt.issuerSuffix }}-letsencrypt-staging
 {{- end }}
 {{- end }}
