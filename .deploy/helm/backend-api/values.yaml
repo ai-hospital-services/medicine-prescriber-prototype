@@ -8,7 +8,7 @@ image:
   repository: "<CONTAINER REPOSITORY>/<IMAGE>"
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.2.0"
+  tag: "0.3.0"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -85,9 +85,9 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
-nodeSelector: {"kubernetes.io/arch": "amd64"}
+nodeSelector: {"kubernetes.io/arch": "arm64"}
 
-tolerations: []
+tolerations: [{key: "kubernetes.io/arch", value: "arm64"}]
 
 affinity: {}
 

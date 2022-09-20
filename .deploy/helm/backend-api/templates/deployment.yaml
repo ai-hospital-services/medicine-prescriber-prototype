@@ -74,7 +74,15 @@ spec:
                 secretKeyRef:
                   key: clientSecret
                   name: {{ include "backend-api.fullname" . }}
+          volumeMounts:
+            - name: data
+              mountPath: /backend/api/data
+              readOnly: true
           args: ["migrateThenApi", "--debug-mode", "{{ .Values.config.debugMode }}", "--port", "{{ .Values.service.port }}"]
+      volumes:
+        - name: data
+          secret:
+            secretName: {{ include "backend-api.fullname" . }}-file
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

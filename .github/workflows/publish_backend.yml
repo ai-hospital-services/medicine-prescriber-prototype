@@ -9,7 +9,7 @@ on:
 
 jobs:
   docker:
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, arm64]
     # if: github.event.pull_request.merged == true
     permissions:
       contents: "read"
