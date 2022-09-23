@@ -39,7 +39,7 @@ dependencies:
   objectid: ^2.1.0
   change_case: ^1.0.2
   yaml: ^3.1.1
-  oauth2_client: ^2.4.2
+  oauth2_client: ^3.0.0
   tuple: ^2.0.0
 
 dev_dependencies:
