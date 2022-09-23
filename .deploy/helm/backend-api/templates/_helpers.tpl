@@ -77,8 +77,8 @@ Create the name of the letsencrypt issuer
 */}}
 {{- define "letsencrypt.issuerName" -}}
 {{- if eq .Values.letsencrypt.mode "production" }}
-{{- .Values.letsencrypt.issuerPrefix }}{{- include "backend-api.name" . }}-letsencrypt-production
+{{- include "backend-api.name" . }}{{- .Values.letsencrypt.issuerSuffix }}-letsencrypt-production
 {{- else }}
-{{- .Values.letsencrypt.issuerPrefix }}{{- include "backend-api.name" . }}-letsencrypt-staging
+{{- include "backend-api.name" . }}{{- .Values.letsencrypt.issuerSuffix }}-letsencrypt-staging
 {{- end }}
 {{- end }}

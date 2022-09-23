@@ -1,10 +1,10 @@
 # medicine-prescriber-prototype
 
-[![Build - Backend](https://github.com/ai-hospital-services/medicine-prescriber-prototype/actions/workflows/build_backend.yml/badge.svg)](https://github.com/ai-hospital-services/medicine-prescriber-prototype/actions/workflows/build_backend.yml)
-[![Build - Frontend](https://github.com/ai-hospital-services/medicine-prescriber-prototype/actions/workflows/build_frontend.yml/badge.svg)](https://github.com/ai-hospital-services/medicine-prescriber-prototype/actions/workflows/build_frontend.yml)
-[![CodeCov](https://codecov.io/gh/ai-hospital-services/medicine-prescriber-prototype/branch/main/graph/badge.svg)](https://codecov.io/gh/ai-hospital-services/medicine-prescriber-prototype)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![License](https://img.shields.io/github/license/ai-hospital-services/medicine-prescriber-prototype)](/LICENSE)
+[![build_backend](https://github.com/ai-hospital-services/medicine-prescriber-prototype/actions/workflows/build_backend.yml/badge.svg)](https://github.com/ai-hospital-services/medicine-prescriber-prototype/actions/workflows/build_backend.yml)
+[![build_frontend](https://github.com/ai-hospital-services/medicine-prescriber-prototype/actions/workflows/build_frontend.yml/badge.svg)](https://github.com/ai-hospital-services/medicine-prescriber-prototype/actions/workflows/build_frontend.yml)
+[![codecov](https://codecov.io/gh/ai-hospital-services/medicine-prescriber-prototype/branch/main/graph/badge.svg?token=XV8PZZNCLC)](https://codecov.io/gh/ai-hospital-services/medicine-prescriber-prototype)
+[![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![license](https://img.shields.io/github/license/ai-hospital-services/medicine-prescriber-prototype)](/LICENSE)
 
 
 > Medicine prescriber prototype for AI-HOSPITAL.SERVICES
