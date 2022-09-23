@@ -39,4 +39,4 @@ jobs:
         with:
           context: ./frontend/app
           push: true
-          tags: asia.gcr.io/ai-hospital-services-prototype/frontend-app:0.3.0
+          tags: asia.gcr.io/ai-hospital-services-prototype/frontend-app:0.4.0

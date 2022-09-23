@@ -5,7 +5,7 @@ RUN apt-get update && apt-get upgrade -y && \
         clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
 
 WORKDIR /
-RUN git clone https://github.com/flutter/flutter.git -b 3.3.2 --depth 1
+RUN git clone https://github.com/flutter/flutter.git --depth 1 -b 3.3.2
 RUN export PATH="$PATH:/flutter/bin" && flutter precache && flutter config --clear-features && \
     flutter config --enable-web --no-enable-linux-desktop --no-enable-macos-desktop \
         --no-enable-windows-desktop --no-single-widget-reload-optimization --no-enable-android \
