@@ -1,0 +1,107 @@
+name: Trained files to base64
+description: Function to convert trained files to base64 encoded strings.
+inputs:
+- {name: test_result, type: Boolean}
+- {name: symptoms_tokeniser}
+- {name: causes_tokeniser}
+- {name: model}
+outputs:
+- {name: symptoms_tokeniser_base64, type: str}
+- {name: causes_tokeniser_base64, type: str}
+- {name: model_base64, type: str}
+implementation:
+  container:
+    image: asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn
+    command:
+    - sh
+    - -ec
+    - |
+      program_path=$(mktemp)
+      printf "%s" "$0" > "$program_path"
+      python3 -u "$program_path" "$@"
+    - |
+      def trained_files_to_base64(
+          test_result,
+          symptoms_tokeniser_path,
+          causes_tokeniser_path,
+          model_path,
+      ):
+          """Function to convert trained files to base64 encoded strings."""
+          import base64
+
+          if not test_result:
+              return
+
+          with open(file=symptoms_tokeniser_path, mode="r") as file:
+              symptoms_tokeniser_content = file.read()
+              symptoms_tokeniser_bytes = symptoms_tokeniser_content.encode("utf-8")
+              symptoms_tokeniser_bytes_base64 = base64.encodebytes(symptoms_tokeniser_bytes)
+              symptoms_tokeniser_base64 = symptoms_tokeniser_bytes_base64.decode(
+                  "utf-8"
+              ).replace("\n", "")
+
+          with open(file=causes_tokeniser_path, mode="r") as file:
+              causes_tokeniser_content = file.read()
+              causes_tokeniser_bytes = causes_tokeniser_content.encode("utf-8")
+              causes_tokeniser_bytes_base64 = base64.encodebytes(causes_tokeniser_bytes)
+              causes_tokeniser_base64 = causes_tokeniser_bytes_base64.decode("utf-8").replace(
+                  "\n", ""
+              )
+
+          with open(file=f"{model_path}/model.h5", mode="rb") as file:
+              model_bytes = file.read()
+              model_bytes_base64 = base64.encodebytes(model_bytes)
+              model_base64 = model_bytes_base64.decode("utf-8").replace("\n", "")
+
+          return (symptoms_tokeniser_base64, causes_tokeniser_base64, model_base64)
+
+      def _deserialize_bool(s) -> bool:
+          from distutils.util import strtobool
+          return strtobool(s) == 1
+
+      def _serialize_str(str_value: str) -> str:
+          if not isinstance(str_value, str):
+              raise TypeError('Value "{}" has type "{}" instead of str.'.format(
+                  str(str_value), str(type(str_value))))
+          return str_value
+
+      import argparse
+      _parser = argparse.ArgumentParser(prog='Trained files to base64', description='Function to convert trained files to base64 encoded strings.')
+      _parser.add_argument("--test-result", dest="test_result", type=_deserialize_bool, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("--symptoms-tokeniser", dest="symptoms_tokeniser_path", type=str, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("--causes-tokeniser", dest="causes_tokeniser_path", type=str, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("--model", dest="model_path", type=str, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=3)
+      _parsed_args = vars(_parser.parse_args())
+      _output_files = _parsed_args.pop("_output_paths", [])
+
+      _outputs = trained_files_to_base64(**_parsed_args)
+
+      _output_serializers = [
+          _serialize_str,
+          _serialize_str,
+          _serialize_str,
+
+      ]
+
+      import os
+      for idx, output_file in enumerate(_output_files):
+          try:
+              os.makedirs(os.path.dirname(output_file))
+          except OSError:
+              pass
+          with open(output_file, 'w') as f:
+              f.write(_output_serializers[idx](_outputs[idx]))
+    args:
+    - --test-result
+    - {inputValue: test_result}
+    - --symptoms-tokeniser
+    - {inputPath: symptoms_tokeniser}
+    - --causes-tokeniser
+    - {inputPath: causes_tokeniser}
+    - --model
+    - {inputPath: model}
+    - '----output-paths'
+    - {outputPath: symptoms_tokeniser_base64}
+    - {outputPath: causes_tokeniser_base64}
+    - {outputPath: model_base64}

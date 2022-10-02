@@ -1,0 +1,831 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: machine-learning-training-pipeline-tensorflow-dnn-
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.14, pipelines.kubeflow.org/pipeline_compilation_time: '2022-10-04T17:37:39.248343',
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Machine learning training
+      pipeline for tensorflow dnn", "inputs": [{"name": "gcs_bucket_name"}, {"name":
+      "file_name"}, {"name": "secret_name"}, {"name": "secret_namespace"}], "name":
+      "Machine learning training pipeline - tensorflow dnn"}'}
+  labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.14}
+spec:
+  entrypoint: machine-learning-training-pipeline-tensorflow-dnn
+  templates:
+  - name: download-file-from-gcs-bucket
+    container:
+      args: [--gcs-bucket-name, '{{inputs.parameters.gcs_bucket_name}}', --file-name,
+        '{{inputs.parameters.file_name}}', --downloaded, /tmp/outputs/downloaded/data]
+      command:
+      - sh
+      - -ec
+      - |
+        program_path=$(mktemp)
+        printf "%s" "$0" > "$program_path"
+        python3 -u "$program_path" "$@"
+      - |
+        def _make_parent_dirs_and_return_path(file_path: str):
+            import os
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            return file_path
+
+        def download_file_from_gcs_bucket(
+            gcs_bucket_name, file_name, downloaded_path
+        ):
+            """Function to download data from gcs bucket."""
+            from google.cloud import storage
+
+            client = storage.Client()
+            bucket = client.bucket(gcs_bucket_name)
+            blob = bucket.blob(file_name)
+            blob.download_to_filename(downloaded_path)
+
+        import argparse
+        _parser = argparse.ArgumentParser(prog='Download file from gcs bucket', description='Function to download data from gcs bucket.')
+        _parser.add_argument("--gcs-bucket-name", dest="gcs_bucket_name", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--file-name", dest="file_name", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--downloaded", dest="downloaded_path", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
+        _parsed_args = vars(_parser.parse_args())
+
+        _outputs = download_file_from_gcs_bucket(**_parsed_args)
+      image: asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn
+      imagePullPolicy: Always
+    inputs:
+      parameters:
+      - {name: file_name}
+      - {name: gcs_bucket_name}
+    outputs:
+      artifacts:
+      - {name: download-file-from-gcs-bucket-downloaded, path: /tmp/outputs/downloaded/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.14
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "false"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Function
+          to download data from gcs bucket.", "implementation": {"container": {"args":
+          ["--gcs-bucket-name", {"inputValue": "gcs_bucket_name"}, "--file-name",
+          {"inputValue": "file_name"}, "--downloaded", {"outputPath": "downloaded"}],
+          "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" >
+          \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def _make_parent_dirs_and_return_path(file_path:
+          str):\n    import os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return
+          file_path\n\ndef download_file_from_gcs_bucket(\n    gcs_bucket_name, file_name,
+          downloaded_path\n):\n    \"\"\"Function to download data from gcs bucket.\"\"\"\n    from
+          google.cloud import storage\n\n    client = storage.Client()\n    bucket
+          = client.bucket(gcs_bucket_name)\n    blob = bucket.blob(file_name)\n    blob.download_to_filename(downloaded_path)\n\nimport
+          argparse\n_parser = argparse.ArgumentParser(prog=''Download file from gcs
+          bucket'', description=''Function to download data from gcs bucket.'')\n_parser.add_argument(\"--gcs-bucket-name\",
+          dest=\"gcs_bucket_name\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--file-name\",
+          dest=\"file_name\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--downloaded\",
+          dest=\"downloaded_path\", type=_make_parent_dirs_and_return_path, required=True,
+          default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs
+          = download_file_from_gcs_bucket(**_parsed_args)\n"], "image": "asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn"}},
+          "inputs": [{"name": "gcs_bucket_name", "type": "String"}, {"name": "file_name",
+          "type": "String"}], "name": "Download file from gcs bucket", "outputs":
+          [{"name": "downloaded"}]}', pipelines.kubeflow.org/component_ref: '{}',
+        pipelines.kubeflow.org/arguments.parameters: '{"file_name": "{{inputs.parameters.file_name}}",
+          "gcs_bucket_name": "{{inputs.parameters.gcs_bucket_name}}"}', pipelines.kubeflow.org/max_cache_staleness: P0D}
+  - name: machine-learning-training-pipeline-tensorflow-dnn
+    inputs:
+      parameters:
+      - {name: file_name}
+      - {name: gcs_bucket_name}
+      - {name: secret_name}
+      - {name: secret_namespace}
+    dag:
+      tasks:
+      - name: download-file-from-gcs-bucket
+        template: download-file-from-gcs-bucket
+        arguments:
+          parameters:
+          - {name: file_name, value: '{{inputs.parameters.file_name}}'}
+          - {name: gcs_bucket_name, value: '{{inputs.parameters.gcs_bucket_name}}'}
+      - name: test-model
+        template: test-model
+        dependencies: [train-model]
+        arguments:
+          artifacts:
+          - {name: train-model-causes_tokeniser, from: '{{tasks.train-model.outputs.artifacts.train-model-causes_tokeniser}}'}
+          - {name: train-model-model, from: '{{tasks.train-model.outputs.artifacts.train-model-model}}'}
+          - {name: train-model-symptoms_tokeniser, from: '{{tasks.train-model.outputs.artifacts.train-model-symptoms_tokeniser}}'}
+      - name: train-model
+        template: train-model
+        dependencies: [download-file-from-gcs-bucket]
+        arguments:
+          artifacts:
+          - {name: download-file-from-gcs-bucket-downloaded, from: '{{tasks.download-file-from-gcs-bucket.outputs.artifacts.download-file-from-gcs-bucket-downloaded}}'}
+      - name: trained-files-to-base64
+        template: trained-files-to-base64
+        dependencies: [test-model, train-model]
+        arguments:
+          parameters:
+          - {name: test-model-Output, value: '{{tasks.test-model.outputs.parameters.test-model-Output}}'}
+          artifacts:
+          - {name: train-model-causes_tokeniser, from: '{{tasks.train-model.outputs.artifacts.train-model-causes_tokeniser}}'}
+          - {name: train-model-model, from: '{{tasks.train-model.outputs.artifacts.train-model-model}}'}
+          - {name: train-model-symptoms_tokeniser, from: '{{tasks.train-model.outputs.artifacts.train-model-symptoms_tokeniser}}'}
+      - name: trained-files-to-gcs
+        template: trained-files-to-gcs
+        dependencies: [test-model, train-model]
+        arguments:
+          parameters:
+          - {name: gcs_bucket_name, value: '{{inputs.parameters.gcs_bucket_name}}'}
+          - {name: test-model-Output, value: '{{tasks.test-model.outputs.parameters.test-model-Output}}'}
+          artifacts:
+          - {name: train-model-causes_tokeniser, from: '{{tasks.train-model.outputs.artifacts.train-model-causes_tokeniser}}'}
+          - {name: train-model-model, from: '{{tasks.train-model.outputs.artifacts.train-model-model}}'}
+          - {name: train-model-symptoms_tokeniser, from: '{{tasks.train-model.outputs.artifacts.train-model-symptoms_tokeniser}}'}
+      - name: trained-files-to-k8s-testing-secret
+        template: trained-files-to-k8s-testing-secret
+        dependencies: [trained-files-to-base64]
+        arguments:
+          parameters:
+          - {name: secret_name, value: '{{inputs.parameters.secret_name}}'}
+          - {name: secret_namespace, value: '{{inputs.parameters.secret_namespace}}'}
+          - {name: trained-files-to-base64-model_base64, value: '{{tasks.trained-files-to-base64.outputs.parameters.trained-files-to-base64-model_base64}}'}
+  - name: test-model
+    container:
+      args: [--symptoms-tokeniser, /tmp/inputs/symptoms_tokeniser/data, --causes-tokeniser,
+        /tmp/inputs/causes_tokeniser/data, --model, /tmp/inputs/model/data, '----output-paths',
+        /tmp/outputs/Output/data]
+      command:
+      - sh
+      - -ec
+      - |
+        program_path=$(mktemp)
+        printf "%s" "$0" > "$program_path"
+        python3 -u "$program_path" "$@"
+      - |
+        def test_model(
+            symptoms_tokeniser_path,
+            causes_tokeniser_path,
+            model_path,
+        ):
+            """Function to test model."""
+            import numpy as np
+            import tensorflow as tf
+
+            # TODO: read from train model step
+            symptoms_padded_maxlen = 9
+
+            with open(file=symptoms_tokeniser_path, mode="r") as f:
+                loaded_symptoms_tokeniser = tf.keras.preprocessing.text.tokenizer_from_json(
+                    f.read()
+                )
+            with open(file=causes_tokeniser_path, mode="r") as f:
+                loaded_causes_tokeniser = tf.keras.preprocessing.text.tokenizer_from_json(
+                    f.read()
+                )
+            loaded_model = tf.keras.models.load_model(f"{model_path}/model.h5")
+            loaded_model.summary()
+
+            test_symptoms = ["vomiting; cramping; feeling nausea; diarrhoea"]
+            test_gender = ["female"]
+            test_symptoms_corpus = [a + ";" + b for a in test_symptoms for b in test_gender]
+            test_symptoms_corpus = test_symptoms_corpus[0].split(";")
+            test_symptoms_corpus = [str(item).lower().strip() for item in test_symptoms_corpus]
+            test_symptoms_corpus = ";".join(test_symptoms_corpus)
+            print(test_symptoms_corpus)
+
+            test_symptoms_sequences = loaded_symptoms_tokeniser.texts_to_sequences(
+                [test_symptoms_corpus]
+            )
+            test_symptoms_padded = tf.keras.preprocessing.sequence.pad_sequences(
+                test_symptoms_sequences,
+                padding="pre",
+                maxlen=symptoms_padded_maxlen,
+            )
+            test_symptoms_padded = np.array(test_symptoms_padded)
+            print(test_symptoms_padded)
+
+            test_causes_probabilities = loaded_model.predict(test_symptoms_padded)[0]
+            print(test_causes_probabilities)
+
+            test_causes_rankings = np.argsort(test_causes_probabilities).tolist()
+            print(test_causes_rankings)
+            print(loaded_causes_tokeniser.index_word)
+            print(
+                loaded_causes_tokeniser.index_word[test_causes_rankings[-1] + 1],
+                round(test_causes_probabilities[test_causes_rankings[-1]] * 100, 2),
+            )
+            print(
+                loaded_causes_tokeniser.index_word[test_causes_rankings[-2] + 1],
+                round(test_causes_probabilities[test_causes_rankings[-2]] * 100, 2),
+            )
+            print(
+                loaded_causes_tokeniser.index_word[test_causes_rankings[-3] + 1],
+                round(test_causes_probabilities[test_causes_rankings[-3]] * 100, 2),
+            )
+
+            return (
+                loaded_causes_tokeniser.index_word[test_causes_rankings[-1] + 1]
+                == "vomiting|food poisoning"
+            )
+
+        def _serialize_bool(bool_value: bool) -> str:
+            if isinstance(bool_value, str):
+                return bool_value
+            if not isinstance(bool_value, bool):
+                raise TypeError('Value "{}" has type "{}" instead of bool.'.format(
+                    str(bool_value), str(type(bool_value))))
+            return str(bool_value)
+
+        import argparse
+        _parser = argparse.ArgumentParser(prog='Test model', description='Function to test model.')
+        _parser.add_argument("--symptoms-tokeniser", dest="symptoms_tokeniser_path", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--causes-tokeniser", dest="causes_tokeniser_path", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--model", dest="model_path", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=1)
+        _parsed_args = vars(_parser.parse_args())
+        _output_files = _parsed_args.pop("_output_paths", [])
+
+        _outputs = test_model(**_parsed_args)
+
+        _outputs = [_outputs]
+
+        _output_serializers = [
+            _serialize_bool,
+
+        ]
+
+        import os
+        for idx, output_file in enumerate(_output_files):
+            try:
+                os.makedirs(os.path.dirname(output_file))
+            except OSError:
+                pass
+            with open(output_file, 'w') as f:
+                f.write(_output_serializers[idx](_outputs[idx]))
+      image: asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn
+      imagePullPolicy: Always
+    inputs:
+      artifacts:
+      - {name: train-model-causes_tokeniser, path: /tmp/inputs/causes_tokeniser/data}
+      - {name: train-model-model, path: /tmp/inputs/model/data}
+      - {name: train-model-symptoms_tokeniser, path: /tmp/inputs/symptoms_tokeniser/data}
+    outputs:
+      parameters:
+      - name: test-model-Output
+        valueFrom: {path: /tmp/outputs/Output/data}
+      artifacts:
+      - {name: test-model-Output, path: /tmp/outputs/Output/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.14
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "false"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Function
+          to test model.", "implementation": {"container": {"args": ["--symptoms-tokeniser",
+          {"inputPath": "symptoms_tokeniser"}, "--causes-tokeniser", {"inputPath":
+          "causes_tokeniser"}, "--model", {"inputPath": "model"}, "----output-paths",
+          {"outputPath": "Output"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+          \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+          "def test_model(\n    symptoms_tokeniser_path,\n    causes_tokeniser_path,\n    model_path,\n):\n    \"\"\"Function
+          to test model.\"\"\"\n    import numpy as np\n    import tensorflow as tf\n\n    #
+          TODO: read from train model step\n    symptoms_padded_maxlen = 9\n\n    with
+          open(file=symptoms_tokeniser_path, mode=\"r\") as f:\n        loaded_symptoms_tokeniser
+          = tf.keras.preprocessing.text.tokenizer_from_json(\n            f.read()\n        )\n    with
+          open(file=causes_tokeniser_path, mode=\"r\") as f:\n        loaded_causes_tokeniser
+          = tf.keras.preprocessing.text.tokenizer_from_json(\n            f.read()\n        )\n    loaded_model
+          = tf.keras.models.load_model(f\"{model_path}/model.h5\")\n    loaded_model.summary()\n\n    test_symptoms
+          = [\"vomiting; cramping; feeling nausea; diarrhoea\"]\n    test_gender =
+          [\"female\"]\n    test_symptoms_corpus = [a + \";\" + b for a in test_symptoms
+          for b in test_gender]\n    test_symptoms_corpus = test_symptoms_corpus[0].split(\";\")\n    test_symptoms_corpus
+          = [str(item).lower().strip() for item in test_symptoms_corpus]\n    test_symptoms_corpus
+          = \";\".join(test_symptoms_corpus)\n    print(test_symptoms_corpus)\n\n    test_symptoms_sequences
+          = loaded_symptoms_tokeniser.texts_to_sequences(\n        [test_symptoms_corpus]\n    )\n    test_symptoms_padded
+          = tf.keras.preprocessing.sequence.pad_sequences(\n        test_symptoms_sequences,\n        padding=\"pre\",\n        maxlen=symptoms_padded_maxlen,\n    )\n    test_symptoms_padded
+          = np.array(test_symptoms_padded)\n    print(test_symptoms_padded)\n\n    test_causes_probabilities
+          = loaded_model.predict(test_symptoms_padded)[0]\n    print(test_causes_probabilities)\n\n    test_causes_rankings
+          = np.argsort(test_causes_probabilities).tolist()\n    print(test_causes_rankings)\n    print(loaded_causes_tokeniser.index_word)\n    print(\n        loaded_causes_tokeniser.index_word[test_causes_rankings[-1]
+          + 1],\n        round(test_causes_probabilities[test_causes_rankings[-1]]
+          * 100, 2),\n    )\n    print(\n        loaded_causes_tokeniser.index_word[test_causes_rankings[-2]
+          + 1],\n        round(test_causes_probabilities[test_causes_rankings[-2]]
+          * 100, 2),\n    )\n    print(\n        loaded_causes_tokeniser.index_word[test_causes_rankings[-3]
+          + 1],\n        round(test_causes_probabilities[test_causes_rankings[-3]]
+          * 100, 2),\n    )\n\n    return (\n        loaded_causes_tokeniser.index_word[test_causes_rankings[-1]
+          + 1]\n        == \"vomiting|food poisoning\"\n    )\n\ndef _serialize_bool(bool_value:
+          bool) -> str:\n    if isinstance(bool_value, str):\n        return bool_value\n    if
+          not isinstance(bool_value, bool):\n        raise TypeError(''Value \"{}\"
+          has type \"{}\" instead of bool.''.format(\n            str(bool_value),
+          str(type(bool_value))))\n    return str(bool_value)\n\nimport argparse\n_parser
+          = argparse.ArgumentParser(prog=''Test model'', description=''Function to
+          test model.'')\n_parser.add_argument(\"--symptoms-tokeniser\", dest=\"symptoms_tokeniser_path\",
+          type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--causes-tokeniser\",
+          dest=\"causes_tokeniser_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--model\",
+          dest=\"model_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"----output-paths\",
+          dest=\"_output_paths\", type=str, nargs=1)\n_parsed_args = vars(_parser.parse_args())\n_output_files
+          = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = test_model(**_parsed_args)\n\n_outputs
+          = [_outputs]\n\n_output_serializers = [\n    _serialize_bool,\n\n]\n\nimport
+          os\nfor idx, output_file in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n    except
+          OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
+          "image": "asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn"}},
+          "inputs": [{"name": "symptoms_tokeniser"}, {"name": "causes_tokeniser"},
+          {"name": "model"}], "name": "Test model", "outputs": [{"name": "Output",
+          "type": "Boolean"}]}', pipelines.kubeflow.org/component_ref: '{}', pipelines.kubeflow.org/max_cache_staleness: P0D}
+  - name: train-model
+    container:
+      args: [--data, /tmp/inputs/data/data, --symptoms-tokeniser, /tmp/outputs/symptoms_tokeniser/data,
+        --causes-tokeniser, /tmp/outputs/causes_tokeniser/data, --model, /tmp/outputs/model/data]
+      command:
+      - sh
+      - -ec
+      - |
+        program_path=$(mktemp)
+        printf "%s" "$0" > "$program_path"
+        python3 -u "$program_path" "$@"
+      - |
+        def _make_parent_dirs_and_return_path(file_path: str):
+            import os
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            return file_path
+
+        def train_model(
+            data_path,
+            symptoms_tokeniser_path,
+            causes_tokeniser_path,
+            model_path,
+        ):
+            """Function to train model."""
+            import numpy as np
+            import pandas as pd
+            import tensorflow as tf
+
+            data = pd.read_csv(data_path, sep="|")
+            data.describe()
+            data.columns = data.columns.str.lower().str.replace(" ", "_")
+            data.head()
+            symptoms_corpus = (
+                data.subjective_symptom + ";" + data.objective_symptom + ";" + data.gender
+            )
+            symptoms_corpus = list(map(lambda item: item.replace("; ", ";"), symptoms_corpus))
+            symptoms_corpus = list(map(lambda item: item.replace(" ;", ";"), symptoms_corpus))
+            print(symptoms_corpus)
+
+            symptoms_tokeniser = tf.keras.preprocessing.text.Tokenizer(
+                split=";",
+                filters="",
+            )
+            symptoms_tokeniser.fit_on_texts(symptoms_corpus)
+            print(symptoms_tokeniser.index_word)
+
+            symptoms_sequences = symptoms_tokeniser.texts_to_sequences(symptoms_corpus)
+            print(symptoms_sequences)
+
+            symptoms_padded = tf.keras.preprocessing.sequence.pad_sequences(
+                symptoms_sequences, padding="pre"
+            )
+            symptoms_padded = np.array(symptoms_padded)
+            print(symptoms_padded)
+
+            causes_corpus = data.subjective_symptom + "|" + data.cause
+            print(causes_corpus)
+
+            causes_tokeniser = tf.keras.preprocessing.text.Tokenizer(
+                split="\n",
+                filters="",
+            )
+            causes_tokeniser.fit_on_texts(causes_corpus)
+            print(causes_tokeniser.index_word)
+
+            causes_sequences = causes_tokeniser.texts_to_sequences(causes_corpus)
+            print(causes_sequences)
+
+            causes_padded = tf.keras.preprocessing.sequence.pad_sequences(
+                causes_sequences, padding="pre"
+            )
+            causes_padded = np.array(causes_padded) - 1
+            print(causes_padded)
+
+            model = tf.keras.Sequential(
+                [
+                    tf.keras.layers.Embedding(
+                        input_dim=len(symptoms_tokeniser.index_word) + 1,
+                        output_dim=16,
+                        input_length=max(map(len, symptoms_padded)),
+                    ),
+                    tf.keras.layers.GlobalAveragePooling1D(),
+                    tf.keras.layers.Dense(32, activation="relu"),
+                    tf.keras.layers.Dense(8, activation="softmax"),
+                ]
+            )
+            model.compile(
+                loss="sparse_categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
+            )
+            model.summary()
+
+            tf.keras.backend.clear_session()
+            tf.random.set_seed(42)
+            model.fit(
+                x=symptoms_padded,
+                y=causes_padded,
+                epochs=500,
+                callbacks=[tf.keras.callbacks.TensorBoard(log_dir="logs")],
+            )
+            model.evaluate(x=symptoms_padded, y=causes_padded)
+
+            with open(file=symptoms_tokeniser_path, mode="w") as f:
+                f.write(symptoms_tokeniser.to_json())
+            with open(file=causes_tokeniser_path, mode="w") as f:
+                f.write(causes_tokeniser.to_json())
+            model.save(f"{model_path}/model.h5")
+
+        import argparse
+        _parser = argparse.ArgumentParser(prog='Train model', description='Function to train model.')
+        _parser.add_argument("--data", dest="data_path", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--symptoms-tokeniser", dest="symptoms_tokeniser_path", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--causes-tokeniser", dest="causes_tokeniser_path", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--model", dest="model_path", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
+        _parsed_args = vars(_parser.parse_args())
+
+        _outputs = train_model(**_parsed_args)
+      image: asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn
+      imagePullPolicy: Always
+    inputs:
+      artifacts:
+      - {name: download-file-from-gcs-bucket-downloaded, path: /tmp/inputs/data/data}
+    outputs:
+      artifacts:
+      - {name: train-model-causes_tokeniser, path: /tmp/outputs/causes_tokeniser/data}
+      - {name: train-model-model, path: /tmp/outputs/model/data}
+      - {name: train-model-symptoms_tokeniser, path: /tmp/outputs/symptoms_tokeniser/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.14
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "false"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Function
+          to train model.", "implementation": {"container": {"args": ["--data", {"inputPath":
+          "data"}, "--symptoms-tokeniser", {"outputPath": "symptoms_tokeniser"}, "--causes-tokeniser",
+          {"outputPath": "causes_tokeniser"}, "--model", {"outputPath": "model"}],
+          "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" >
+          \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def _make_parent_dirs_and_return_path(file_path:
+          str):\n    import os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return
+          file_path\n\ndef train_model(\n    data_path,\n    symptoms_tokeniser_path,\n    causes_tokeniser_path,\n    model_path,\n):\n    \"\"\"Function
+          to train model.\"\"\"\n    import numpy as np\n    import pandas as pd\n    import
+          tensorflow as tf\n\n    data = pd.read_csv(data_path, sep=\"|\")\n    data.describe()\n    data.columns
+          = data.columns.str.lower().str.replace(\" \", \"_\")\n    data.head()\n    symptoms_corpus
+          = (\n        data.subjective_symptom + \";\" + data.objective_symptom +
+          \";\" + data.gender\n    )\n    symptoms_corpus = list(map(lambda item:
+          item.replace(\"; \", \";\"), symptoms_corpus))\n    symptoms_corpus = list(map(lambda
+          item: item.replace(\" ;\", \";\"), symptoms_corpus))\n    print(symptoms_corpus)\n\n    symptoms_tokeniser
+          = tf.keras.preprocessing.text.Tokenizer(\n        split=\";\",\n        filters=\"\",\n    )\n    symptoms_tokeniser.fit_on_texts(symptoms_corpus)\n    print(symptoms_tokeniser.index_word)\n\n    symptoms_sequences
+          = symptoms_tokeniser.texts_to_sequences(symptoms_corpus)\n    print(symptoms_sequences)\n\n    symptoms_padded
+          = tf.keras.preprocessing.sequence.pad_sequences(\n        symptoms_sequences,
+          padding=\"pre\"\n    )\n    symptoms_padded = np.array(symptoms_padded)\n    print(symptoms_padded)\n\n    causes_corpus
+          = data.subjective_symptom + \"|\" + data.cause\n    print(causes_corpus)\n\n    causes_tokeniser
+          = tf.keras.preprocessing.text.Tokenizer(\n        split=\"\\n\",\n        filters=\"\",\n    )\n    causes_tokeniser.fit_on_texts(causes_corpus)\n    print(causes_tokeniser.index_word)\n\n    causes_sequences
+          = causes_tokeniser.texts_to_sequences(causes_corpus)\n    print(causes_sequences)\n\n    causes_padded
+          = tf.keras.preprocessing.sequence.pad_sequences(\n        causes_sequences,
+          padding=\"pre\"\n    )\n    causes_padded = np.array(causes_padded) - 1\n    print(causes_padded)\n\n    model
+          = tf.keras.Sequential(\n        [\n            tf.keras.layers.Embedding(\n                input_dim=len(symptoms_tokeniser.index_word)
+          + 1,\n                output_dim=16,\n                input_length=max(map(len,
+          symptoms_padded)),\n            ),\n            tf.keras.layers.GlobalAveragePooling1D(),\n            tf.keras.layers.Dense(32,
+          activation=\"relu\"),\n            tf.keras.layers.Dense(8, activation=\"softmax\"),\n        ]\n    )\n    model.compile(\n        loss=\"sparse_categorical_crossentropy\",
+          optimizer=\"adam\", metrics=[\"accuracy\"]\n    )\n    model.summary()\n\n    tf.keras.backend.clear_session()\n    tf.random.set_seed(42)\n    model.fit(\n        x=symptoms_padded,\n        y=causes_padded,\n        epochs=500,\n        callbacks=[tf.keras.callbacks.TensorBoard(log_dir=\"logs\")],\n    )\n    model.evaluate(x=symptoms_padded,
+          y=causes_padded)\n\n    with open(file=symptoms_tokeniser_path, mode=\"w\")
+          as f:\n        f.write(symptoms_tokeniser.to_json())\n    with open(file=causes_tokeniser_path,
+          mode=\"w\") as f:\n        f.write(causes_tokeniser.to_json())\n    model.save(f\"{model_path}/model.h5\")\n\nimport
+          argparse\n_parser = argparse.ArgumentParser(prog=''Train model'', description=''Function
+          to train model.'')\n_parser.add_argument(\"--data\", dest=\"data_path\",
+          type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--symptoms-tokeniser\",
+          dest=\"symptoms_tokeniser_path\", type=_make_parent_dirs_and_return_path,
+          required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--causes-tokeniser\",
+          dest=\"causes_tokeniser_path\", type=_make_parent_dirs_and_return_path,
+          required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--model\",
+          dest=\"model_path\", type=_make_parent_dirs_and_return_path, required=True,
+          default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs
+          = train_model(**_parsed_args)\n"], "image": "asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn"}},
+          "inputs": [{"name": "data"}], "name": "Train model", "outputs": [{"name":
+          "symptoms_tokeniser"}, {"name": "causes_tokeniser"}, {"name": "model"}]}',
+        pipelines.kubeflow.org/component_ref: '{}', pipelines.kubeflow.org/max_cache_staleness: P0D}
+  - name: trained-files-to-base64
+    container:
+      args: [--test-result, '{{inputs.parameters.test-model-Output}}', --symptoms-tokeniser,
+        /tmp/inputs/symptoms_tokeniser/data, --causes-tokeniser, /tmp/inputs/causes_tokeniser/data,
+        --model, /tmp/inputs/model/data, '----output-paths', /tmp/outputs/symptoms_tokeniser_base64/data,
+        /tmp/outputs/causes_tokeniser_base64/data, /tmp/outputs/model_base64/data]
+      command:
+      - sh
+      - -ec
+      - |
+        program_path=$(mktemp)
+        printf "%s" "$0" > "$program_path"
+        python3 -u "$program_path" "$@"
+      - |
+        def trained_files_to_base64(
+            test_result,
+            symptoms_tokeniser_path,
+            causes_tokeniser_path,
+            model_path,
+        ):
+            """Function to convert trained files to base64 encoded strings."""
+            import base64
+
+            if not test_result:
+                return
+
+            with open(file=symptoms_tokeniser_path, mode="r") as file:
+                symptoms_tokeniser_content = file.read()
+                symptoms_tokeniser_bytes = symptoms_tokeniser_content.encode("utf-8")
+                symptoms_tokeniser_bytes_base64 = base64.encodebytes(symptoms_tokeniser_bytes)
+                symptoms_tokeniser_base64 = symptoms_tokeniser_bytes_base64.decode(
+                    "utf-8"
+                ).replace("\n", "")
+
+            with open(file=causes_tokeniser_path, mode="r") as file:
+                causes_tokeniser_content = file.read()
+                causes_tokeniser_bytes = causes_tokeniser_content.encode("utf-8")
+                causes_tokeniser_bytes_base64 = base64.encodebytes(causes_tokeniser_bytes)
+                causes_tokeniser_base64 = causes_tokeniser_bytes_base64.decode("utf-8").replace(
+                    "\n", ""
+                )
+
+            with open(file=f"{model_path}/model.h5", mode="rb") as file:
+                model_bytes = file.read()
+                model_bytes_base64 = base64.encodebytes(model_bytes)
+                model_base64 = model_bytes_base64.decode("utf-8").replace("\n", "")
+
+            return (symptoms_tokeniser_base64, causes_tokeniser_base64, model_base64)
+
+        def _deserialize_bool(s) -> bool:
+            from distutils.util import strtobool
+            return strtobool(s) == 1
+
+        def _serialize_str(str_value: str) -> str:
+            if not isinstance(str_value, str):
+                raise TypeError('Value "{}" has type "{}" instead of str.'.format(
+                    str(str_value), str(type(str_value))))
+            return str_value
+
+        import argparse
+        _parser = argparse.ArgumentParser(prog='Trained files to base64', description='Function to convert trained files to base64 encoded strings.')
+        _parser.add_argument("--test-result", dest="test_result", type=_deserialize_bool, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--symptoms-tokeniser", dest="symptoms_tokeniser_path", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--causes-tokeniser", dest="causes_tokeniser_path", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--model", dest="model_path", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=3)
+        _parsed_args = vars(_parser.parse_args())
+        _output_files = _parsed_args.pop("_output_paths", [])
+
+        _outputs = trained_files_to_base64(**_parsed_args)
+
+        _output_serializers = [
+            _serialize_str,
+            _serialize_str,
+            _serialize_str,
+
+        ]
+
+        import os
+        for idx, output_file in enumerate(_output_files):
+            try:
+                os.makedirs(os.path.dirname(output_file))
+            except OSError:
+                pass
+            with open(output_file, 'w') as f:
+                f.write(_output_serializers[idx](_outputs[idx]))
+      image: asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn
+      imagePullPolicy: Always
+    inputs:
+      parameters:
+      - {name: test-model-Output}
+      artifacts:
+      - {name: train-model-causes_tokeniser, path: /tmp/inputs/causes_tokeniser/data}
+      - {name: train-model-model, path: /tmp/inputs/model/data}
+      - {name: train-model-symptoms_tokeniser, path: /tmp/inputs/symptoms_tokeniser/data}
+    outputs:
+      parameters:
+      - name: trained-files-to-base64-model_base64
+        valueFrom: {path: /tmp/outputs/model_base64/data}
+      artifacts:
+      - {name: trained-files-to-base64-causes_tokeniser_base64, path: /tmp/outputs/causes_tokeniser_base64/data}
+      - {name: trained-files-to-base64-model_base64, path: /tmp/outputs/model_base64/data}
+      - {name: trained-files-to-base64-symptoms_tokeniser_base64, path: /tmp/outputs/symptoms_tokeniser_base64/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.14
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "false"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Function
+          to convert trained files to base64 encoded strings.", "implementation":
+          {"container": {"args": ["--test-result", {"inputValue": "test_result"},
+          "--symptoms-tokeniser", {"inputPath": "symptoms_tokeniser"}, "--causes-tokeniser",
+          {"inputPath": "causes_tokeniser"}, "--model", {"inputPath": "model"}, "----output-paths",
+          {"outputPath": "symptoms_tokeniser_base64"}, {"outputPath": "causes_tokeniser_base64"},
+          {"outputPath": "model_base64"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+          \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+          "def trained_files_to_base64(\n    test_result,\n    symptoms_tokeniser_path,\n    causes_tokeniser_path,\n    model_path,\n):\n    \"\"\"Function
+          to convert trained files to base64 encoded strings.\"\"\"\n    import base64\n\n    if
+          not test_result:\n        return\n\n    with open(file=symptoms_tokeniser_path,
+          mode=\"r\") as file:\n        symptoms_tokeniser_content = file.read()\n        symptoms_tokeniser_bytes
+          = symptoms_tokeniser_content.encode(\"utf-8\")\n        symptoms_tokeniser_bytes_base64
+          = base64.encodebytes(symptoms_tokeniser_bytes)\n        symptoms_tokeniser_base64
+          = symptoms_tokeniser_bytes_base64.decode(\n            \"utf-8\"\n        ).replace(\"\\n\",
+          \"\")\n\n    with open(file=causes_tokeniser_path, mode=\"r\") as file:\n        causes_tokeniser_content
+          = file.read()\n        causes_tokeniser_bytes = causes_tokeniser_content.encode(\"utf-8\")\n        causes_tokeniser_bytes_base64
+          = base64.encodebytes(causes_tokeniser_bytes)\n        causes_tokeniser_base64
+          = causes_tokeniser_bytes_base64.decode(\"utf-8\").replace(\n            \"\\n\",
+          \"\"\n        )\n\n    with open(file=f\"{model_path}/model.h5\", mode=\"rb\")
+          as file:\n        model_bytes = file.read()\n        model_bytes_base64
+          = base64.encodebytes(model_bytes)\n        model_base64 = model_bytes_base64.decode(\"utf-8\").replace(\"\\n\",
+          \"\")\n\n    return (symptoms_tokeniser_base64, causes_tokeniser_base64,
+          model_base64)\n\ndef _deserialize_bool(s) -> bool:\n    from distutils.util
+          import strtobool\n    return strtobool(s) == 1\n\ndef _serialize_str(str_value:
+          str) -> str:\n    if not isinstance(str_value, str):\n        raise TypeError(''Value
+          \"{}\" has type \"{}\" instead of str.''.format(\n            str(str_value),
+          str(type(str_value))))\n    return str_value\n\nimport argparse\n_parser
+          = argparse.ArgumentParser(prog=''Trained files to base64'', description=''Function
+          to convert trained files to base64 encoded strings.'')\n_parser.add_argument(\"--test-result\",
+          dest=\"test_result\", type=_deserialize_bool, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--symptoms-tokeniser\",
+          dest=\"symptoms_tokeniser_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--causes-tokeniser\",
+          dest=\"causes_tokeniser_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--model\",
+          dest=\"model_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"----output-paths\",
+          dest=\"_output_paths\", type=str, nargs=3)\n_parsed_args = vars(_parser.parse_args())\n_output_files
+          = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = trained_files_to_base64(**_parsed_args)\n\n_output_serializers
+          = [\n    _serialize_str,\n    _serialize_str,\n    _serialize_str,\n\n]\n\nimport
+          os\nfor idx, output_file in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n    except
+          OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
+          "image": "asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn"}},
+          "inputs": [{"name": "test_result", "type": "Boolean"}, {"name": "symptoms_tokeniser"},
+          {"name": "causes_tokeniser"}, {"name": "model"}], "name": "Trained files
+          to base64", "outputs": [{"name": "symptoms_tokeniser_base64", "type": "str"},
+          {"name": "causes_tokeniser_base64", "type": "str"}, {"name": "model_base64",
+          "type": "str"}]}', pipelines.kubeflow.org/component_ref: '{}', pipelines.kubeflow.org/arguments.parameters: '{"test_result":
+          "{{inputs.parameters.test-model-Output}}"}', pipelines.kubeflow.org/max_cache_staleness: P0D}
+  - name: trained-files-to-gcs
+    container:
+      args: [--test-result, '{{inputs.parameters.test-model-Output}}', --gcs-bucket-name,
+        '{{inputs.parameters.gcs_bucket_name}}', --symptoms-tokeniser, /tmp/inputs/symptoms_tokeniser/data,
+        --causes-tokeniser, /tmp/inputs/causes_tokeniser/data, --model, /tmp/inputs/model/data,
+        '----output-paths', /tmp/outputs/Output/data]
+      command:
+      - sh
+      - -ec
+      - |
+        program_path=$(mktemp)
+        printf "%s" "$0" > "$program_path"
+        python3 -u "$program_path" "$@"
+      - |
+        def trained_files_to_gcs(
+            test_result,
+            gcs_bucket_name,
+            symptoms_tokeniser_path,
+            causes_tokeniser_path,
+            model_path,
+        ):
+            """Function to upload training output to gcs bucket."""
+            from google.cloud import storage
+
+            if not test_result:
+                return
+
+            client = storage.Client()
+            bucket = client.bucket(gcs_bucket_name)
+
+            with open(file=symptoms_tokeniser_path, mode="r") as file:
+                blob = bucket.blob("symptoms_tokeniser.json")
+                blob.upload_from_file(file)
+
+            with open(file=causes_tokeniser_path, mode="r") as file:
+                blob = bucket.blob("causes_tokeniser.json")
+                blob.upload_from_file(file)
+
+            with open(file=f"{model_path}/model.h5", mode="rb") as file:
+                blob = bucket.blob("model.h5")
+                blob.upload_from_file(file, content_type="bytes")
+
+            return True
+
+        def _deserialize_bool(s) -> bool:
+            from distutils.util import strtobool
+            return strtobool(s) == 1
+
+        def _serialize_bool(bool_value: bool) -> str:
+            if isinstance(bool_value, str):
+                return bool_value
+            if not isinstance(bool_value, bool):
+                raise TypeError('Value "{}" has type "{}" instead of bool.'.format(
+                    str(bool_value), str(type(bool_value))))
+            return str(bool_value)
+
+        import argparse
+        _parser = argparse.ArgumentParser(prog='Trained files to gcs', description='Function to upload training output to gcs bucket.')
+        _parser.add_argument("--test-result", dest="test_result", type=_deserialize_bool, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--gcs-bucket-name", dest="gcs_bucket_name", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--symptoms-tokeniser", dest="symptoms_tokeniser_path", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--causes-tokeniser", dest="causes_tokeniser_path", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--model", dest="model_path", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=1)
+        _parsed_args = vars(_parser.parse_args())
+        _output_files = _parsed_args.pop("_output_paths", [])
+
+        _outputs = trained_files_to_gcs(**_parsed_args)
+
+        _outputs = [_outputs]
+
+        _output_serializers = [
+            _serialize_bool,
+
+        ]
+
+        import os
+        for idx, output_file in enumerate(_output_files):
+            try:
+                os.makedirs(os.path.dirname(output_file))
+            except OSError:
+                pass
+            with open(output_file, 'w') as f:
+                f.write(_output_serializers[idx](_outputs[idx]))
+      image: asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn
+      imagePullPolicy: Always
+    inputs:
+      parameters:
+      - {name: gcs_bucket_name}
+      - {name: test-model-Output}
+      artifacts:
+      - {name: train-model-causes_tokeniser, path: /tmp/inputs/causes_tokeniser/data}
+      - {name: train-model-model, path: /tmp/inputs/model/data}
+      - {name: train-model-symptoms_tokeniser, path: /tmp/inputs/symptoms_tokeniser/data}
+    outputs:
+      artifacts:
+      - {name: trained-files-to-gcs-Output, path: /tmp/outputs/Output/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.14
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "false"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Function
+          to upload training output to gcs bucket.", "implementation": {"container":
+          {"args": ["--test-result", {"inputValue": "test_result"}, "--gcs-bucket-name",
+          {"inputValue": "gcs_bucket_name"}, "--symptoms-tokeniser", {"inputPath":
+          "symptoms_tokeniser"}, "--causes-tokeniser", {"inputPath": "causes_tokeniser"},
+          "--model", {"inputPath": "model"}, "----output-paths", {"outputPath": "Output"}],
+          "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" >
+          \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def trained_files_to_gcs(\n    test_result,\n    gcs_bucket_name,\n    symptoms_tokeniser_path,\n    causes_tokeniser_path,\n    model_path,\n):\n    \"\"\"Function
+          to upload training output to gcs bucket.\"\"\"\n    from google.cloud import
+          storage\n\n    if not test_result:\n        return\n\n    client = storage.Client()\n    bucket
+          = client.bucket(gcs_bucket_name)\n\n    with open(file=symptoms_tokeniser_path,
+          mode=\"r\") as file:\n        blob = bucket.blob(\"symptoms_tokeniser.json\")\n        blob.upload_from_file(file)\n\n    with
+          open(file=causes_tokeniser_path, mode=\"r\") as file:\n        blob = bucket.blob(\"causes_tokeniser.json\")\n        blob.upload_from_file(file)\n\n    with
+          open(file=f\"{model_path}/model.h5\", mode=\"rb\") as file:\n        blob
+          = bucket.blob(\"model.h5\")\n        blob.upload_from_file(file, content_type=\"bytes\")\n\n    return
+          True\n\ndef _deserialize_bool(s) -> bool:\n    from distutils.util import
+          strtobool\n    return strtobool(s) == 1\n\ndef _serialize_bool(bool_value:
+          bool) -> str:\n    if isinstance(bool_value, str):\n        return bool_value\n    if
+          not isinstance(bool_value, bool):\n        raise TypeError(''Value \"{}\"
+          has type \"{}\" instead of bool.''.format(\n            str(bool_value),
+          str(type(bool_value))))\n    return str(bool_value)\n\nimport argparse\n_parser
+          = argparse.ArgumentParser(prog=''Trained files to gcs'', description=''Function
+          to upload training output to gcs bucket.'')\n_parser.add_argument(\"--test-result\",
+          dest=\"test_result\", type=_deserialize_bool, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--gcs-bucket-name\",
+          dest=\"gcs_bucket_name\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--symptoms-tokeniser\",
+          dest=\"symptoms_tokeniser_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--causes-tokeniser\",
+          dest=\"causes_tokeniser_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--model\",
+          dest=\"model_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"----output-paths\",
+          dest=\"_output_paths\", type=str, nargs=1)\n_parsed_args = vars(_parser.parse_args())\n_output_files
+          = _parsed_args.pop(\"_output_paths\", [])\n\n_outputs = trained_files_to_gcs(**_parsed_args)\n\n_outputs
+          = [_outputs]\n\n_output_serializers = [\n    _serialize_bool,\n\n]\n\nimport
+          os\nfor idx, output_file in enumerate(_output_files):\n    try:\n        os.makedirs(os.path.dirname(output_file))\n    except
+          OSError:\n        pass\n    with open(output_file, ''w'') as f:\n        f.write(_output_serializers[idx](_outputs[idx]))\n"],
+          "image": "asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn"}},
+          "inputs": [{"name": "test_result", "type": "Boolean"}, {"name": "gcs_bucket_name",
+          "type": "String"}, {"name": "symptoms_tokeniser"}, {"name": "causes_tokeniser"},
+          {"name": "model"}], "name": "Trained files to gcs", "outputs": [{"name":
+          "Output", "type": "Boolean"}]}', pipelines.kubeflow.org/component_ref: '{}',
+        pipelines.kubeflow.org/arguments.parameters: '{"gcs_bucket_name": "{{inputs.parameters.gcs_bucket_name}}",
+          "test_result": "{{inputs.parameters.test-model-Output}}"}', pipelines.kubeflow.org/max_cache_staleness: P0D}
+  - name: trained-files-to-k8s-testing-secret
+    resource:
+      action: apply
+      manifest: |
+        apiVersion: v1
+        data:
+          model.h5: '{{inputs.parameters.trained-files-to-base64-model_base64}}'
+        kind: Secret
+        metadata:
+          name: '{{inputs.parameters.secret_name}}'
+          namespace: '{{inputs.parameters.secret_namespace}}'
+        type: Opaque
+    inputs:
+      parameters:
+      - {name: secret_name}
+      - {name: secret_namespace}
+      - {name: trained-files-to-base64-model_base64}
+    outputs:
+      parameters:
+      - name: trained-files-to-k8s-testing-secret-manifest
+        valueFrom: {jsonPath: '{}'}
+      - name: trained-files-to-k8s-testing-secret-name
+        valueFrom: {jsonPath: '{.metadata.name}'}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.14
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "false"
+  arguments:
+    parameters:
+    - {name: gcs_bucket_name}
+    - {name: file_name}
+    - {name: secret_name}
+    - {name: secret_namespace}
+  serviceAccountName: pipeline-runner

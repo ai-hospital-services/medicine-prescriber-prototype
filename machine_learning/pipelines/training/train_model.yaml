@@ -1,0 +1,132 @@
+name: Train model
+description: Function to train model.
+inputs:
+- {name: data}
+outputs:
+- {name: symptoms_tokeniser}
+- {name: causes_tokeniser}
+- {name: model}
+implementation:
+  container:
+    image: asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn
+    command:
+    - sh
+    - -ec
+    - |
+      program_path=$(mktemp)
+      printf "%s" "$0" > "$program_path"
+      python3 -u "$program_path" "$@"
+    - |
+      def _make_parent_dirs_and_return_path(file_path: str):
+          import os
+          os.makedirs(os.path.dirname(file_path), exist_ok=True)
+          return file_path
+
+      def train_model(
+          data_path,
+          symptoms_tokeniser_path,
+          causes_tokeniser_path,
+          model_path,
+      ):
+          """Function to train model."""
+          import numpy as np
+          import pandas as pd
+          import tensorflow as tf
+
+          data = pd.read_csv(data_path, sep="|")
+          data.describe()
+          data.columns = data.columns.str.lower().str.replace(" ", "_")
+          data.head()
+          symptoms_corpus = (
+              data.subjective_symptom + ";" + data.objective_symptom + ";" + data.gender
+          )
+          symptoms_corpus = list(map(lambda item: item.replace("; ", ";"), symptoms_corpus))
+          symptoms_corpus = list(map(lambda item: item.replace(" ;", ";"), symptoms_corpus))
+          print(symptoms_corpus)
+
+          symptoms_tokeniser = tf.keras.preprocessing.text.Tokenizer(
+              split=";",
+              filters="",
+          )
+          symptoms_tokeniser.fit_on_texts(symptoms_corpus)
+          print(symptoms_tokeniser.index_word)
+
+          symptoms_sequences = symptoms_tokeniser.texts_to_sequences(symptoms_corpus)
+          print(symptoms_sequences)
+
+          symptoms_padded = tf.keras.preprocessing.sequence.pad_sequences(
+              symptoms_sequences, padding="pre"
+          )
+          symptoms_padded = np.array(symptoms_padded)
+          print(symptoms_padded)
+
+          causes_corpus = data.subjective_symptom + "|" + data.cause
+          print(causes_corpus)
+
+          causes_tokeniser = tf.keras.preprocessing.text.Tokenizer(
+              split="\n",
+              filters="",
+          )
+          causes_tokeniser.fit_on_texts(causes_corpus)
+          print(causes_tokeniser.index_word)
+
+          causes_sequences = causes_tokeniser.texts_to_sequences(causes_corpus)
+          print(causes_sequences)
+
+          causes_padded = tf.keras.preprocessing.sequence.pad_sequences(
+              causes_sequences, padding="pre"
+          )
+          causes_padded = np.array(causes_padded) - 1
+          print(causes_padded)
+
+          model = tf.keras.Sequential(
+              [
+                  tf.keras.layers.Embedding(
+                      input_dim=len(symptoms_tokeniser.index_word) + 1,
+                      output_dim=16,
+                      input_length=max(map(len, symptoms_padded)),
+                  ),
+                  tf.keras.layers.GlobalAveragePooling1D(),
+                  tf.keras.layers.Dense(32, activation="relu"),
+                  tf.keras.layers.Dense(8, activation="softmax"),
+              ]
+          )
+          model.compile(
+              loss="sparse_categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
+          )
+          model.summary()
+
+          tf.keras.backend.clear_session()
+          tf.random.set_seed(42)
+          model.fit(
+              x=symptoms_padded,
+              y=causes_padded,
+              epochs=500,
+              callbacks=[tf.keras.callbacks.TensorBoard(log_dir="logs")],
+          )
+          model.evaluate(x=symptoms_padded, y=causes_padded)
+
+          with open(file=symptoms_tokeniser_path, mode="w") as f:
+              f.write(symptoms_tokeniser.to_json())
+          with open(file=causes_tokeniser_path, mode="w") as f:
+              f.write(causes_tokeniser.to_json())
+          model.save(f"{model_path}/model.h5")
+
+      import argparse
+      _parser = argparse.ArgumentParser(prog='Train model', description='Function to train model.')
+      _parser.add_argument("--data", dest="data_path", type=str, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("--symptoms-tokeniser", dest="symptoms_tokeniser_path", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("--causes-tokeniser", dest="causes_tokeniser_path", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("--model", dest="model_path", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
+      _parsed_args = vars(_parser.parse_args())
+
+      _outputs = train_model(**_parsed_args)
+    args:
+    - --data
+    - {inputPath: data}
+    - --symptoms-tokeniser
+    - {outputPath: symptoms_tokeniser}
+    - --causes-tokeniser
+    - {outputPath: causes_tokeniser}
+    - --model
+    - {outputPath: model}

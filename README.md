@@ -19,11 +19,7 @@ Table of Contents:
 		- [Prerequisites](#prerequisites)
 		- [Setup backend api](#setup-backend-api)
 		- [Run locally](#run-locally)
-		- [Deployment](#deployment)
 	- [Authors](#authors)
-	- [🤝 Contributing](#-contributing)
-	- [Show your support](#show-your-support)
-	- [Acknowledgments](#acknowledgments)
 	- [📝 License](#-license)
 
 ## Built With
@@ -123,9 +119,6 @@ cd backend
 pytest -v --cov=api
 ```
 
-### Deployment
-
-
 
 ## Authors
 
@@ -134,22 +127,6 @@ pytest -v --cov=api
 - [![Github](https://img.shields.io/github/followers/ankursoni?style=social)](https://github.com/ankursoni)
 - [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/ankursoniji)
 - [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/fold_left.svg?style=social&label=Follow%20%40ankursoniji)](https://twitter.com/ankursoniji)
-
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
-
-Feel free to check the [issues page](../../issues/).
-
-
-## Show your support
-
-Give a ⭐️ if you like this project!
-
-
-## Acknowledgments
-
 
 
 ## 📝 License
