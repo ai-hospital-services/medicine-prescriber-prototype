@@ -1,19 +1,11 @@
 name: publish_machine_learning_training
 
-on:
-  # pull_request:
-  #   branches:
-  #     - main
-  #   types:
-  #     - closed
-  push:
-    branches:
-      - feature/prototype1
+on: push
 
 jobs:
   docker:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    # if: github.event.pull_request.merged == true
     permissions:
       contents: "read"
       id-token: "write"
