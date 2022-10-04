@@ -376,6 +376,7 @@ def training_tensorflow_dnn_pipeline(
             k8s_manifest.replace("<SECRET_NAME>", f"{secret_name}").replace(
                 "<SECRET_NAMESPACE>", f"{secret_namespace}"
             )
+            # TODO: overcome the limitation of argument list too long issue: https://github.com/argoproj/argo-workflows/issues/7586
             #     "<SYMPTOMS_TOKENISER_BASE64>",
             #     f"{trained_files_to_base64_task.outputs['symptoms_tokeniser_base64']}",
             # )
