@@ -6,7 +6,9 @@ on:
   #     - main
   #   types:
   #     - closed
-  push
+  push:
+    branches:
+      - feature/prototype1
 
 jobs:
   docker:
