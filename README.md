@@ -21,6 +21,7 @@ Table of Contents:
     - [Setup prerequisites in google kubernetes engine](#setup-prerequisites-in-google-kubernetes-engine)
     - [Setup backend api in google kubernetes engine](#setup-backend-api-in-google-kubernetes-engine)
     - [Setup frontend app in google kubernetes engine](#setup-frontend-app-in-google-kubernetes-engine)
+    - [Setup kubeflow machine learning pipeline](#setup-kubeflow-machine-learning-pipeline)
     - [Run tests](#run-tests)
   - [Authors](#authors)
   - [📝 License](#-license)
@@ -56,6 +57,7 @@ Table of Contents:
 - Flux CD v0.34
 - ingress-nginx controller v4.2.5
 - cert-manager for letsencrypt v1.9.1
+- Kubeflow standalone pipelines v1.8.5
 - Tensorflow v2
 
 
@@ -150,7 +152,7 @@ touch nginx-ingress-values-secret.yaml
 #   nodeSelector: {"kubernetes.io/arch": "arm64"}
 #   tolerations: [{key: "kubernetes.io/arch", value: "arm64"}]
 
-# to override arm64 node selection and tolerations, add,
+# to override arm64 node selection and tolerations, replace with,
 # nodeSelector: {}
 # tolerations: []
 
@@ -224,6 +226,11 @@ docker push asia.gcr.io/<PREFIX>-<ENVIRONMENT>/backend-api:<VERSION>
 # change directory
 cd .deplpoy/clusters/gke01
 
+# create machine learning output secret and 'backend' namespace
+mkdir backend/data
+cp ../../../machine_learning/experiments/data/ backend/data/
+kubectl apply -k backend
+
 # prepare the '../../helm/backend-api/values-secret.yaml'
 touch ../../helm/backend-api/values-secret.yaml
 
@@ -294,6 +301,9 @@ docker push asia.gcr.io/<PREFIX>-<ENVIRONMENT>/frontend-app:<VERSION>
 # change directory
 cd .deplpoy/clusters/gke01
 
+# create 'froontend' namespace
+kubectl apply -k frontend
+
 # prepare the '../../helm/frontend-app/values-secret.yaml'
 touch ../../helm/frontend-app/values-secret.yaml
 
@@ -348,6 +358,75 @@ kubectl delete -f frontend/frontend-app-release.yaml
 kubectl delete -k frontend
 
 # configure the google cloud dns by adding an 'A' record for the <APP DOMAIN NAME>
+```
+
+### Setup kubeflow machine learning pipeline
+Reference:
+- https://www.kubeflow.org/docs/components/pipelines/v1/installation/standalone-deployment/
+- https://www.kubeflow.org/docs/components/pipelines/v1/sdk/install-sdk/
+- https://www.kubeflow.org/docs/distributions/gke/pipelines/authentication-pipelines/
+
+Make sure the data file is uploaded to the google cloud storage bucket - `<PREFIX>-<ENVIRONMENT>-storagebucket01` as `data.psv`.
+
+```sh
+# enable prerequisite google cloud services
+gcloud services enable \
+  serviceusage.googleapis.com \
+  compute.googleapis.com \
+  container.googleapis.com \
+  iam.googleapis.com \
+  servicemanagement.googleapis.com \
+  cloudresourcemanager.googleapis.com \
+  ml.googleapis.com \
+  iap.googleapis.com \
+  sqladmin.googleapis.com \
+  meshconfig.googleapis.com \
+  krmapihosting.googleapis.com \
+  servicecontrol.googleapis.com \
+  endpoints.googleapis.com \
+  iamcredentials.googleapis.com
+
+# install kubeflow standalone pipeline runtime
+export PIPELINE_VERSION=1.8.5
+kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"
+kubectl wait --for condition=established --timeout=60s crd/applications.app.k8s.io
+kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/env/platform-agnostic-pns?ref=$PIPELINE_VERSION"
+
+# build machine learning dependencies docker image
+cd machine_learning/pipelines/training
+docker build -t asia.gcr.io/<PREFIX>-<ENVIRONMENT>/machine_learning_training:tensorflow_dnn .
+
+# push docker image
+gcloud auth configure-docker
+docker push asia.gcr.io/<PREFIX>-<ENVIRONMENT>/machine_learning_training:tensorflow_dnn
+
+# install kubeflow pip dependencies
+pip install kfp --upgrade
+
+# apply role binding for kubeflow 'pipeline-runner' service account to create secrets in 'backend' namespace
+kubectl apply secretsrolebinding.yaml
+
+# port forward from kubeflow pipeline ui service
+kubectl port-forward --namespace kubeflow svc/ml-pipeline-ui 3000:80
+
+# run the training pipeline - 'Machine learning training pipeline - tensorflow dnn'
+GCS_STORAGE_BUCKET_NAME="<PREFIX>-<ENVIRONMENT>-storagebucket01" \
+DATA_FILE_NAME="data.psv" \
+SECRET_NAME="test" \
+SECRET_NAMESPACE="backend" \
+  python tensorflow_dnn.py
+
+# check the pipeline execution on browser
+http://localhost:3000
+
+# check the training output files are available in the google cloud storage bucket - '<PREFIX>-<ENVIRONMENT>-storagebucket01'
+# check the secret - 'test' has been created in the 'backend' namespace
+
+# if you want to stop and remove helm release and namespace
+export PIPELINE_VERSION=1.8.5
+kubectl delete -k "github.com/kubeflow/pipelines/manifests/kustomize/env/platform-agnostic-pns?ref=$PIPELINE_VERSION"
+kubectl delete -k "github.com/kubeflow/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"
+kubectl delete -n kubeflow
 ```
 
 ### Run tests
