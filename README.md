@@ -12,18 +12,18 @@
 
 Table of Contents:
 - [medicine-prescriber-prototype](#medicine-prescriber-prototype)
-	- [Repository map](#repository-map)
-	- [Built with](#built-with)
-	- [Getting started](#getting-started)
-		- [Prerequisites](#prerequisites)
-		- [Run machine learning experiments](#run-machine-learning-experiments)
-		- [Run backend api locally](#run-backend-api-locally)
-		- [Setup prerequisites in google kubernetes engine](#setup-prerequisites-in-google-kubernetes-engine)
-		- [Setup backend api in google kubernetes engine](#setup-backend-api-in-google-kubernetes-engine)
-		- [Setup frontend app in google kubernetes engine](#setup-frontend-app-in-google-kubernetes-engine)
-		- [Run tests](#run-tests)
-	- [Authors](#authors)
-	- [📝 License](#-license)
+  - [Repository map](#repository-map)
+  - [Built with](#built-with)
+  - [Getting started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Run machine learning experiments](#run-machine-learning-experiments)
+    - [Run backend api locally](#run-backend-api-locally)
+    - [Setup prerequisites in google kubernetes engine](#setup-prerequisites-in-google-kubernetes-engine)
+    - [Setup backend api in google kubernetes engine](#setup-backend-api-in-google-kubernetes-engine)
+    - [Setup frontend app in google kubernetes engine](#setup-frontend-app-in-google-kubernetes-engine)
+    - [Run tests](#run-tests)
+  - [Authors](#authors)
+  - [📝 License](#-license)
 
 
 ## Repository map
@@ -54,6 +54,8 @@ Table of Contents:
 - Docker
 - Kubernetes & Helm chart
 - Flux CD v0.34
+- ingress-nginx controller v4.2.5
+- cert-manager for letsencrypt v1.9.1
 - Tensorflow v2
 
 
