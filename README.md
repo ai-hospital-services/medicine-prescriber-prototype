@@ -406,6 +406,24 @@ pip install kfp --upgrade
 # apply role binding for kubeflow 'pipeline-runner' service account to create secrets in 'backend' namespace
 kubectl apply secretsrolebinding.yaml
 
+# annotate kubernetes service account to use google service account (already provisioned by terraform) that has iam role to read/write to google cloud storage bucket
+PROJECT_ID="<PREFIX>-<ENVIRONMENT>"
+NAMESPACE="kubeflow"
+GSA="gke01-kfp-user@${PROJECT_ID}.iam.gserviceaccount.com"
+KSA="pipeline-runner"
+kubectl annotate serviceaccount \
+  --namespace $NAMESPACE \
+  --overwrite \
+  $KSA \
+  iam.gke.io/gcp-service-account=$GSA
+
+# run the above for the following combination as well
+GSA="gke01-kfp-system@${PROJECT_ID}.iam.gserviceaccount.com"
+KSA="ml-pipeline-ui"
+
+GSA="gke01-kfp-system@${PROJECT_ID}.iam.gserviceaccount.com"
+KSA="ml-pipeline-visualizationserver"
+
 # port forward from kubeflow pipeline ui service
 kubectl port-forward --namespace kubeflow svc/ml-pipeline-ui 3000:80
 
