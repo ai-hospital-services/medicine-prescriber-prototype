@@ -94,33 +94,51 @@ pip install -r ./backend/api/requirements.txt -r ./backend/api/requirements_dev.
 # lint python code
 pylint ./backend/api
 ```
-Make sure you've configured oauth2 tenant like from `Auth0` or any other, to enable access tokens for backend api.
-Use the postman collection in `backend/ai-hospital.services.postman_collection.json` to run queries thereafter.
 
 ### Run machine learning experiments
 ```sh
 # change directory
 cd machine_learning/experiments/tensorflow
 
-# make sure the data file is available in 'data' subdirectory
+# make sure the data file is copied to the 'data' subdirectory
 mkdir data
 cp <DATA SOURCE DIRECTORY>/data.psv data/
 
 # run the jupyter notebook - tensorflow_dnn.ipynb
 jupyter notebook tensorflow_dnn.ipynb
 
-# check the machine learning output
+# check the machine learning training output
 ls data
 >>> causes_tokeniser.json  data.psv  model.h5  symptoms_tokeniser.json
 ```
 
 ### Run backend api locally
+Make sure you've configured oauth2 tenant like `Auth0` or any other, to enable access tokens for backend api.
+Use the postman collection in `backend/ai-hospital.services.postman_collection.json` to run queries after the following steps:
 ```sh
 # change directory
 cd backend
 
+# copy the machine learning training output to a new data
+mkdir api/data
+cp ../machine_learning/experiments/tensorflow/data/* api/data/
+
 # argument --debug-mode = true or false (default) to enable debug mode logging
-FLASK_DEBUG=1 python -m api.app --debug-mode true --port 8080
+FLASK_DEBUG=1 \
+MONGODB_URL="mongodb://localhost:27017/" \
+TENANT_DOMAIN="<TENANT DOMAIN>" \
+REDIRECT_URL="<REDIRECT URL>" \
+CLIENT_ID="<CLIENT ID>" \
+CLIENT_SECRET="<CLIENT SECRET>" \
+  python -m api.app --debug-mode true --port 8080
+
+# note:
+# FLASK_DEBUG = debug mode for flask - 1 (default) or 0
+# MONGODB_URL = mongodb connection url - "mongodb://localhost:27017/" (default)
+# TENANT_DOMAIN = oauth2 tenant domain
+# REDIRECT_URL = oauth2 redirect url
+# CLIENT_ID = oauth2 client id
+# CLIENT_SECRET = oauth2 client secret
 
 # curl to hit backend api
 curl http://localhost:8080
@@ -224,6 +242,8 @@ kubectl apply -f medicine-prescriber-prototype-source.yaml
 ```
 
 ### Setup backend api in google kubernetes engine
+Make sure you've configured oauth2 tenant like `Auth0` or any other, to enable access tokens for backend api.
+Use the postman collection in `backend/ai-hospital.services.postman_collection.json` to run queries after the following steps:
 ```sh
 # make sure the docker image for backend api has been built with image tag for GCR in Asia, like,  
 # asia.gcr.io/<PREFIX>-<ENVIRONMENT>/backend-api:<VERSION>
@@ -239,7 +259,7 @@ cd .deplpoy/clusters/gke01
 
 # create machine learning output secret and 'backend' namespace
 mkdir backend/data
-cp ../../../machine_learning/experiments/data/ backend/data/
+cp ../../../machine_learning/experiments/data/* backend/data/
 kubectl apply -k backend
 
 # prepare the '../../helm/backend-api/values-secret.yaml'
