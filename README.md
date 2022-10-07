@@ -13,11 +13,13 @@
 Table of Contents:
 - [medicine-prescriber-prototype](#medicine-prescriber-prototype)
   - [Repository map](#repository-map)
+  - [Infrastructure](#infrastructure)
   - [Built with](#built-with)
   - [Getting started](#getting-started)
     - [Prerequisites](#prerequisites)
     - [Run machine learning experiments](#run-machine-learning-experiments)
     - [Run backend api locally](#run-backend-api-locally)
+  - [Kubernetes workloads](#kubernetes-workloads)
     - [Setup prerequisites in google kubernetes engine](#setup-prerequisites-in-google-kubernetes-engine)
     - [Setup backend api in google kubernetes engine](#setup-backend-api-in-google-kubernetes-engine)
     - [Setup frontend app in google kubernetes engine](#setup-frontend-app-in-google-kubernetes-engine)
@@ -32,7 +34,7 @@ Table of Contents:
  📌 -------------------------------> you are here
 ┬
 ├── .deploy   ---------------------> deployment related code
-│   ├── clusters   ----------------> contains fluxcd helm releases pipeline as code for gitops based CD
+│   ├── clusters   ----------------> contains fluxcd helm release pipelines as code for gitops based CD
 │   └── helm   --------------------> contains Helm charts for Kubernetetes workloads - backend api and frontend app
 │── .github   ---------------------> github related workflows
 │   └── workflows   ---------------> contains code for running github workflows for CI and docker build and publish to GCR
@@ -47,10 +49,14 @@ Table of Contents:
 │── media   -----------------------> contains images
 ```
 
+## Infrastructure
+
+![gcp-topology-infrastructure](media/gcp-topology-infrastructure.png)
 
 ## Built with
 - Flutter v3
 - Python v3.9 & Flask v2.2
+- Tensorflow v2
 - MongoDB v6
 - Docker
 - Kubernetes & Helm chart
@@ -58,11 +64,11 @@ Table of Contents:
 - ingress-nginx controller v4.2.5
 - cert-manager for letsencrypt v1.9.1
 - Kubeflow standalone pipelines v1.8.5
-- Tensorflow v2
+- Github workflows
 
 
 ## Getting started
-To get a local copy up and running, follow these simple example steps.
+To get a local copy up and running, follow these steps.
 
 ### Prerequisites
 - Install python 3.9.13: https://www.python.org/downloads/release/python-3913/
@@ -120,6 +126,11 @@ FLASK_DEBUG=1 python -m api.app --debug-mode true --port 8080
 curl http://localhost:8080
 >>> Welcome to backend api!
 ```
+
+
+## Kubernetes workloads
+
+![kubernetes](media/kubernetes.png)
 
 ### Setup prerequisites in google kubernetes engine
 Make sure to setup the backend infrastructure on google cloud by following instructions:
@@ -361,6 +372,9 @@ kubectl delete -k frontend
 ```
 
 ### Setup kubeflow machine learning pipeline
+
+![kubeflow-pipeline-execution](media/kubeflow-pipeline-execution.png)
+
 Reference:
 - https://www.kubeflow.org/docs/components/pipelines/v1/installation/standalone-deployment/
 - https://www.kubeflow.org/docs/components/pipelines/v1/sdk/install-sdk/

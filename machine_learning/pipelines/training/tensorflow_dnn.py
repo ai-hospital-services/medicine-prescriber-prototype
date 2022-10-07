@@ -370,7 +370,7 @@ def training_tensorflow_dnn_pipeline(
     # "causes_tokeniser.json": "<CAUSES_TOKENISER_BASE64>",
 
     k8s_resource_op = dsl.ResourceOp(
-        name="Trained files to k8s testing secret",
+        name="Trained files to kubernetes secret",
         action="apply",
         k8s_resource=json.loads(
             k8s_manifest.replace("<SECRET_NAME>", f"{secret_name}").replace(

@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   generateName: machine-learning-training-pipeline-tensorflow-dnn-
-  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.14, pipelines.kubeflow.org/pipeline_compilation_time: '2022-10-04T17:37:39.248343',
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.14, pipelines.kubeflow.org/pipeline_compilation_time: '2022-10-07T13:36:43.827082',
     pipelines.kubeflow.org/pipeline_spec: '{"description": "Machine learning training
       pipeline for tensorflow dnn", "inputs": [{"name": "gcs_bucket_name"}, {"name":
       "file_name"}, {"name": "secret_name"}, {"name": "secret_namespace"}], "name":
@@ -134,8 +134,8 @@ spec:
           - {name: train-model-causes_tokeniser, from: '{{tasks.train-model.outputs.artifacts.train-model-causes_tokeniser}}'}
           - {name: train-model-model, from: '{{tasks.train-model.outputs.artifacts.train-model-model}}'}
           - {name: train-model-symptoms_tokeniser, from: '{{tasks.train-model.outputs.artifacts.train-model-symptoms_tokeniser}}'}
-      - name: trained-files-to-k8s-testing-secret
-        template: trained-files-to-k8s-testing-secret
+      - name: trained-files-to-kubernetes-secret
+        template: trained-files-to-kubernetes-secret
         dependencies: [trained-files-to-base64]
         arguments:
           parameters:
@@ -794,7 +794,7 @@ spec:
           "Output", "type": "Boolean"}]}', pipelines.kubeflow.org/component_ref: '{}',
         pipelines.kubeflow.org/arguments.parameters: '{"gcs_bucket_name": "{{inputs.parameters.gcs_bucket_name}}",
           "test_result": "{{inputs.parameters.test-model-Output}}"}', pipelines.kubeflow.org/max_cache_staleness: P0D}
-  - name: trained-files-to-k8s-testing-secret
+  - name: trained-files-to-kubernetes-secret
     resource:
       action: apply
       manifest: |
@@ -813,9 +813,9 @@ spec:
       - {name: trained-files-to-base64-model_base64}
     outputs:
       parameters:
-      - name: trained-files-to-k8s-testing-secret-manifest
+      - name: trained-files-to-kubernetes-secret-manifest
         valueFrom: {jsonPath: '{}'}
-      - name: trained-files-to-k8s-testing-secret-name
+      - name: trained-files-to-kubernetes-secret-name
         valueFrom: {jsonPath: '{.metadata.name}'}
     metadata:
       labels:
