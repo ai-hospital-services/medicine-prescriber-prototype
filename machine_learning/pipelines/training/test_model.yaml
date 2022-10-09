@@ -1,0 +1,128 @@
+name: Test model
+description: Function to test model.
+inputs:
+- {name: symptoms_tokeniser}
+- {name: causes_tokeniser}
+- {name: model}
+outputs:
+- {name: Output, type: Boolean}
+implementation:
+  container:
+    image: asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn
+    command:
+    - sh
+    - -ec
+    - |
+      program_path=$(mktemp)
+      printf "%s" "$0" > "$program_path"
+      python3 -u "$program_path" "$@"
+    - |
+      def test_model(
+          symptoms_tokeniser_path,
+          causes_tokeniser_path,
+          model_path,
+      ):
+          """Function to test model."""
+          import numpy as np
+          import tensorflow as tf
+
+          # TODO: read from train model step
+          symptoms_padded_maxlen = 9
+
+          with open(file=symptoms_tokeniser_path, mode="r") as f:
+              loaded_symptoms_tokeniser = tf.keras.preprocessing.text.tokenizer_from_json(
+                  f.read()
+              )
+          with open(file=causes_tokeniser_path, mode="r") as f:
+              loaded_causes_tokeniser = tf.keras.preprocessing.text.tokenizer_from_json(
+                  f.read()
+              )
+          loaded_model = tf.keras.models.load_model(f"{model_path}/model.h5")
+          loaded_model.summary()
+
+          test_symptoms = ["vomiting; cramping; feeling nausea; diarrhoea"]
+          test_gender = ["female"]
+          test_symptoms_corpus = [a + ";" + b for a in test_symptoms for b in test_gender]
+          test_symptoms_corpus = test_symptoms_corpus[0].split(";")
+          test_symptoms_corpus = [str(item).lower().strip() for item in test_symptoms_corpus]
+          test_symptoms_corpus = ";".join(test_symptoms_corpus)
+          print(test_symptoms_corpus)
+
+          test_symptoms_sequences = loaded_symptoms_tokeniser.texts_to_sequences(
+              [test_symptoms_corpus]
+          )
+          test_symptoms_padded = tf.keras.preprocessing.sequence.pad_sequences(
+              test_symptoms_sequences,
+              padding="pre",
+              maxlen=symptoms_padded_maxlen,
+          )
+          test_symptoms_padded = np.array(test_symptoms_padded)
+          print(test_symptoms_padded)
+
+          test_causes_probabilities = loaded_model.predict(test_symptoms_padded)[0]
+          print(test_causes_probabilities)
+
+          test_causes_rankings = np.argsort(test_causes_probabilities).tolist()
+          print(test_causes_rankings)
+          print(loaded_causes_tokeniser.index_word)
+          print(
+              loaded_causes_tokeniser.index_word[test_causes_rankings[-1] + 1],
+              round(test_causes_probabilities[test_causes_rankings[-1]] * 100, 2),
+          )
+          print(
+              loaded_causes_tokeniser.index_word[test_causes_rankings[-2] + 1],
+              round(test_causes_probabilities[test_causes_rankings[-2]] * 100, 2),
+          )
+          print(
+              loaded_causes_tokeniser.index_word[test_causes_rankings[-3] + 1],
+              round(test_causes_probabilities[test_causes_rankings[-3]] * 100, 2),
+          )
+
+          return (
+              loaded_causes_tokeniser.index_word[test_causes_rankings[-1] + 1]
+              == "vomiting|food poisoning"
+          )
+
+      def _serialize_bool(bool_value: bool) -> str:
+          if isinstance(bool_value, str):
+              return bool_value
+          if not isinstance(bool_value, bool):
+              raise TypeError('Value "{}" has type "{}" instead of bool.'.format(
+                  str(bool_value), str(type(bool_value))))
+          return str(bool_value)
+
+      import argparse
+      _parser = argparse.ArgumentParser(prog='Test model', description='Function to test model.')
+      _parser.add_argument("--symptoms-tokeniser", dest="symptoms_tokeniser_path", type=str, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("--causes-tokeniser", dest="causes_tokeniser_path", type=str, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("--model", dest="model_path", type=str, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=1)
+      _parsed_args = vars(_parser.parse_args())
+      _output_files = _parsed_args.pop("_output_paths", [])
+
+      _outputs = test_model(**_parsed_args)
+
+      _outputs = [_outputs]
+
+      _output_serializers = [
+          _serialize_bool,
+
+      ]
+
+      import os
+      for idx, output_file in enumerate(_output_files):
+          try:
+              os.makedirs(os.path.dirname(output_file))
+          except OSError:
+              pass
+          with open(output_file, 'w') as f:
+              f.write(_output_serializers[idx](_outputs[idx]))
+    args:
+    - --symptoms-tokeniser
+    - {inputPath: symptoms_tokeniser}
+    - --causes-tokeniser
+    - {inputPath: causes_tokeniser}
+    - --model
+    - {inputPath: model}
+    - '----output-paths'
+    - {outputPath: Output}

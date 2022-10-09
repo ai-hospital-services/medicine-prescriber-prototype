@@ -1,0 +1,49 @@
+name: Download file from gcs bucket
+description: Function to download data from gcs bucket.
+inputs:
+- {name: gcs_bucket_name, type: String}
+- {name: file_name, type: String}
+outputs:
+- {name: downloaded}
+implementation:
+  container:
+    image: asia.gcr.io/ai-hospital-services-prototype/machine_learning_training:tensorflow_dnn
+    command:
+    - sh
+    - -ec
+    - |
+      program_path=$(mktemp)
+      printf "%s" "$0" > "$program_path"
+      python3 -u "$program_path" "$@"
+    - |
+      def _make_parent_dirs_and_return_path(file_path: str):
+          import os
+          os.makedirs(os.path.dirname(file_path), exist_ok=True)
+          return file_path
+
+      def download_file_from_gcs_bucket(
+          gcs_bucket_name, file_name, downloaded_path
+      ):
+          """Function to download data from gcs bucket."""
+          from google.cloud import storage
+
+          client = storage.Client()
+          bucket = client.bucket(gcs_bucket_name)
+          blob = bucket.blob(file_name)
+          blob.download_to_filename(downloaded_path)
+
+      import argparse
+      _parser = argparse.ArgumentParser(prog='Download file from gcs bucket', description='Function to download data from gcs bucket.')
+      _parser.add_argument("--gcs-bucket-name", dest="gcs_bucket_name", type=str, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("--file-name", dest="file_name", type=str, required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("--downloaded", dest="downloaded_path", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
+      _parsed_args = vars(_parser.parse_args())
+
+      _outputs = download_file_from_gcs_bucket(**_parsed_args)
+    args:
+    - --gcs-bucket-name
+    - {inputValue: gcs_bucket_name}
+    - --file-name
+    - {inputValue: file_name}
+    - --downloaded
+    - {outputPath: downloaded}
