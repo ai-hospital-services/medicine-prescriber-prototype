@@ -60,7 +60,7 @@ Table of Contents:
 - MongoDB v6
 - Docker
 - Kubernetes & Helm chart
-- Flux CD v0.34
+- Flux CD v0.35
 - ingress-nginx controller v4.2.5
 - cert-manager for letsencrypt v1.9.1
 - Kubeflow standalone pipelines v1.8.5
