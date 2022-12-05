@@ -29,7 +29,8 @@
                 // "MONGODB_URL": "mongodb://<USER>:<PASSWORD>@localhost:27017/ai_hospital_services?authMechanism=DEFAULT&authSource=ai_hospital_services",
                 "TENANT_DOMAIN": "<TENANT DOMAIN>",
                 "CLIENT_ID": "<CLIENT ID>",
-                "CLIENT_SECRET": "<CLIENT SECRET>"
+                "CLIENT_SECRET": "<CLIENT SECRET>",
+                // "REDIRECT_URL": "<REDIRECT_URL>"
             },
             "args": [
                 "--debug-mode=true",

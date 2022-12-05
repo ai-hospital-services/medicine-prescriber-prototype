@@ -71,6 +71,9 @@ def init() -> None:
         "SYMPTOMS_SEQUENCE_MAXLEN", default=config.SYMPTOMS_SEQUENCE_MAXLEN
     )
     config.MONGODB_URL = os.environ.get("MONGODB_URL", default=config.MONGODB_URL)
+    config.MONGODB_DATABASE = os.environ.get(
+        "MONGODB_DATABASE", default=config.MONGODB_DATABASE
+    )
     config.WEB_REQUEST_TIMEOUT = os.environ.get(
         "WEB_REQUEST_TIMEOUT", default=config.WEB_REQUEST_TIMEOUT
     )

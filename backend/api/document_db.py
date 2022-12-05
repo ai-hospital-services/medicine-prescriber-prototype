@@ -45,7 +45,7 @@ def read_all_subjective_symptoms() -> list[str]:
     logger = get_logger()
 
     logger.info("Starting read all subjective symptoms")
-    database = State.MONGODB_CLIENT.ai_hospital_services
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
     result = []
     for document in database.subjective_symptoms.find({}):
         document = json_util.dumps(document)
@@ -61,7 +61,7 @@ def read_all_objective_symptoms() -> list[str]:
     logger = get_logger()
 
     logger.info("Starting read all objective symptoms")
-    database = State.MONGODB_CLIENT.ai_hospital_services
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
     result = []
     for document in database.objective_symptoms.find({}):
         document = json_util.dumps(document)
@@ -78,7 +78,7 @@ def read_all_etiologies() -> list[str]:
     logger = get_logger()
 
     logger.info("Starting read all etiologies")
-    database = State.MONGODB_CLIENT.ai_hospital_services
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
     result = []
     for document in database.etiologies.find({}):
         document = json_util.dumps(document)
@@ -99,7 +99,7 @@ def read_etiology(subjective_symptom_id, cause) -> str:
         subjective_symptom_id=subjective_symptom_id,
         cause=cause,
     )
-    database = State.MONGODB_CLIENT.ai_hospital_services
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
     document = database.etiologies.find_one(
         {
             "subjective_symptom_id": ObjectId(subjective_symptom_id),
@@ -123,7 +123,7 @@ def read_drugs(etiology_id) -> list[str]:
     logger = get_logger()
 
     logger.info("Starting read drugs by etiology", etiology_id=etiology_id)
-    database = State.MONGODB_CLIENT.ai_hospital_services
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
     result = []
     for document in database.drugs.find({"etiology_id": ObjectId(etiology_id)}):
         document = json_util.dumps(document)

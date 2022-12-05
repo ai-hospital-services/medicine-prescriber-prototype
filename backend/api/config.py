@@ -15,6 +15,7 @@ SYMPTOMS_SEQUENCE_MAXLEN = 9
 
 # mongodb
 MONGODB_URL = "mongodb://localhost:27017/"
+MONGODB_DATABASE = "ai_hospital_services"
 
 # oauth2
 WEB_REQUEST_TIMEOUT = 15

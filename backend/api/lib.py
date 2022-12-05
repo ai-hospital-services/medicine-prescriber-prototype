@@ -60,12 +60,19 @@ def log_config_settings() -> None:
     logger.info("Starting log config settings in DEBUG mode")
     logger.debug("", DEBUG_MODE=config.DEBUG_MODE)
     logger.debug("", PORT=config.PORT)
+    logger.debug("", MODEL_FILE=config.MODEL_FILE)
     logger.debug(
         "",
         SYMPTOMS_TOKENISER_FILE=config.SYMPTOMS_TOKENISER_FILE,
     )
     logger.debug("", CAUSES_TOKENISER_FILE=config.CAUSES_TOKENISER_FILE)
-    logger.debug("", MODEL_FILE=config.MODEL_FILE)
+    logger.debug("", SYMPTOMS_SEPARATOR=config.SYMPTOMS_SEPARATOR)
+    logger.debug(
+        "", SYMPTOMS_SEQUENCE_PADDING_TYPE=config.SYMPTOMS_SEQUENCE_PADDING_TYPE
+    )
+    logger.debug("", SYMPTOMS_SEQUENCE_MAXLEN=config.SYMPTOMS_SEQUENCE_MAXLEN)
+    logger.debug("", MONGODB_URL=config.MONGODB_URL)
+    logger.debug("", MONGODB_DATABASE=config.MONGODB_DATABASE)
     logger.debug("", WEB_REQUEST_TIMEOUT=config.WEB_REQUEST_TIMEOUT)
     logger.debug("", CACHE_TIMEOUT=config.CACHE_TIMEOUT)
     logger.debug("", TENANT_DOMAIN=config.TENANT_DOMAIN)
