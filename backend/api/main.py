@@ -5,40 +5,6 @@ import os
 from . import config, document_db, lib, machine_learning, oauth2
 
 
-def read_all_subjective_symptoms() -> list[str]:
-    """Read all subjective symptoms."""
-    return document_db.read_all_subjective_symptoms()
-
-
-def read_all_objective_symptoms() -> list[str]:
-    """Read all objective symptoms."""
-    return document_db.read_all_objective_symptoms()
-
-
-def predict_cause(
-    subjective_symptoms, objective_symptoms, gender
-) -> list[(str, float)]:
-    """Predict cause from symptoms."""
-    return machine_learning.predict_cause(
-        subjective_symptoms, objective_symptoms, gender
-    )
-
-
-def read_all_etiologies() -> list[str]:
-    """Read all etiologies data."""
-    return document_db.read_all_etiologies()
-
-
-def read_etiology(subjective_symptom_id, cause) -> str:
-    """Read etiology data by subjective symptom and cause."""
-    return document_db.read_etiology(subjective_symptom_id, cause)
-
-
-def read_drugs(etiology_id) -> list[str]:
-    """Read drugs by etiology."""
-    return document_db.read_drugs(etiology_id)
-
-
 def get_access_token(authorisation_code) -> str:
     """Get access token using authorisation code."""
     return oauth2.get_access_token(authorisation_code)
@@ -47,6 +13,31 @@ def get_access_token(authorisation_code) -> str:
 def validate_access_token(token, claims) -> bool:
     """Validate access token and verify claims."""
     return oauth2.validate_access_token(token, claims)
+
+
+def read_doctor_raw_data_links(profile_link) -> list[str]:
+    """Read doctor raw data links."""
+    return document_db.read_doctor_raw_data_links(profile_link)
+
+
+def read_doctor_raw_data(question_detail_link) -> list[str]:
+    """Read doctor raw data."""
+    return document_db.read_doctor_raw_data(question_detail_link)
+
+
+def read_all_symptoms() -> list[str]:
+    """Read all symptoms."""
+    return document_db.read_all_symptoms()
+
+
+def read_all_causes() -> list[str]:
+    """Read all causes."""
+    return document_db.read_all_causes()
+
+
+def read_doctor_processed_data(question_detail_link) -> list[str]:
+    """Read doctor processed data."""
+    return document_db.read_doctor_processed_data(question_detail_link)
 
 
 def init() -> None:
@@ -95,7 +86,7 @@ def init() -> None:
 
     machine_learning.configure()
     document_db.configure_mongodb_client()
-    # mongodb.log_mongodb_status()
+    # document_db.log_mongodb_status()
     oauth2.init_cache_state()
 
 

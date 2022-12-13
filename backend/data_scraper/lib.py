@@ -16,7 +16,7 @@ class CLIArgs:
     """Class for command line interface (cli) arguments."""
 
     debug_mode: bool = None
-    port: int = None
+    doctor_profile_link: str = None
 
 
 def parse_cli_args() -> CLIArgs:
@@ -26,11 +26,11 @@ def parse_cli_args() -> CLIArgs:
     logger.info("Starting parse cli arguments")
     parser = argparse.ArgumentParser(description="CLI arguments")
     parser.add_argument("--debug-mode", help="Enable debug mode logging")
-    parser.add_argument("--port", help="Port number to run on")
+    parser.add_argument("--doctor-profile-link", help="Doctor profile link")
     args = parser.parse_args()
     debug_mode = json.loads(args.debug_mode) if args.debug_mode else config.DEBUG_MODE
-    port = args.port if args.port else config.PORT
-    result = CLIArgs(debug_mode=debug_mode, port=port)
+    doctor_profile_link = args.doctor_profile_link
+    result = CLIArgs(debug_mode=debug_mode, doctor_profile_link=doctor_profile_link)
     logger.info("Completed parse cli arguments")
 
     return result
@@ -58,6 +58,12 @@ def log_config_settings() -> None:
     logger = get_logger()
 
     logger.info("Starting log config settings in DEBUG mode")
-    for configuration in [attr for attr in dir(config) if not attr.startswith("__")]:
-        logger.debug(configuration, value=config.__dict__[configuration])
+    logger.debug("", DEBUG_MODE=config.DEBUG_MODE)
+    logger.debug("", MONGODB_URL=config.MONGODB_URL)
+    logger.debug("", MONGODB_DATABASE=config.MONGODB_DATABASE)
+    logger.debug("", HEALTHCAREMAGIC_DOMAIN_URL=config.HEALTHCAREMAGIC_DOMAIN_URL)
+    logger.debug(
+        "",
+        HEALTHCAREMAGIC_REQUEST_TIMEOUT_SECONDS=config.HEALTHCAREMAGIC_REQUEST_TIMEOUT_SECONDS,
+    )
     logger.info("Completed log config settings in DEBUG mode")

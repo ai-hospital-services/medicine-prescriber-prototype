@@ -49,5 +49,20 @@
                 "--cov=api"
             ]
         },
+        {
+            "name": "Python: data scraper",
+            "type": "python",
+            "request": "launch",
+            "module": "data_scraper.main",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/backend",
+            "env": {
+                // "MONGODB_URL": "mongodb://<USER>:<PASSWORD>@localhost:27017/ai_hospital_services?authMechanism=DEFAULT&authSource=ai_hospital_services",
+            },
+            "args": [
+                "--debug-mode=true",
+                "--doctor-profile-link=https://doctor.healthcaremagic.com/doctors/dr-t-chandrakant/67188"
+            ]
+        },
     ]
 }
