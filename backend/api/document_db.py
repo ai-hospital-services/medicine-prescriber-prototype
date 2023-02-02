@@ -5,7 +5,6 @@ import re
 from dataclasses import dataclass
 
 from bson import json_util
-from bson.objectid import ObjectId
 from pymongo import MongoClient
 from structlog import get_logger
 
@@ -40,6 +39,124 @@ def log_mongodb_status() -> None:
     logger.info("Completed log mongodb status in DEBUG mode")
 
 
+# region symptoms to causes
+
+
+def read_all_subjective_symptoms() -> list[str]:
+    """Read all subjective symptoms."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read all subjective symptoms",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.subjective_symptoms.find({}):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read all subjective symptoms",
+    )
+
+    return result
+
+
+def read_all_associated_symptoms() -> list[str]:
+    """Read all associated symptoms."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read all associated symptoms",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.associated_symptoms.find({}):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read all associated symptoms",
+    )
+
+    return result
+
+
+def read_all_gender() -> list[str]:
+    """Read all gender values."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read all gender values",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.gender.find({}):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read all gender values",
+    )
+
+    return result
+
+
+def read_all_age_groups() -> list[str]:
+    """Read all age groups."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read all age groups",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.age_groups.find({}):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read all age groups",
+    )
+
+    return result
+
+
+def read_all_investigations() -> list[str]:
+    """Read all investigations."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read all investigations",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.investigations.find({}):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read all investigations",
+    )
+
+    return result
+
+
+def read_advises(provisional_diagnosis) -> list[str]:
+    """Read advised investigations, management and surgical management."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read advised investigations, management and surgical management",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.provisional_diagnosis_advises.find(
+        {"provisional_diagnosis": provisional_diagnosis}
+    ):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read advised investigations, management and surgical management",
+    )
+
+    return result
+
+
+# endregion
+
+# region data scrapper
+
+
 def read_doctor_raw_data_links(profile_link) -> list[str]:
     """Read doctor raw data links."""
     logger = get_logger()
@@ -54,9 +171,7 @@ def read_doctor_raw_data_links(profile_link) -> list[str]:
         {"doctor_profile_link": profile_link},
         {"_id": True, "question_detail_link": True},
     ):
-        document = json_util.dumps(document)
-        document = _replace_oid(document)
-        result.append(json.loads(document))
+        result.append(_clean_document(document))
     logger.info(
         "Completed read doctor raw data links by profile link",
         profile_link=profile_link,
@@ -78,55 +193,10 @@ def read_doctor_raw_data(question_detail_link) -> list[str]:
     for document in database.doctor_raw_data.find(
         {"question_detail_link": question_detail_link},
     ):
-        document = json_util.dumps(document)
-        document = _replace_oid(document)
-        document = _replace_date(document)
-        result.append(json.loads(document))
+        result.append(_clean_document(document))
     logger.info(
         "Completed read doctor raw data links by question detail link",
         question_detail_link=question_detail_link,
-    )
-
-    return result
-
-
-def read_all_symptoms() -> list[str]:
-    """Read all symptoms."""
-    logger = get_logger()
-
-    logger.info(
-        "Starting read all symptoms",
-    )
-    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
-    result = []
-    for document in database.symptoms.find({}):
-        document = json_util.dumps(document)
-        document = _replace_oid(document)
-        document = _replace_date(document)
-        result.append(json.loads(document))
-    logger.info(
-        "Completed read all symptoms",
-    )
-
-    return result
-
-
-def read_all_causes() -> list[str]:
-    """Read all causes."""
-    logger = get_logger()
-
-    logger.info(
-        "Starting read all causes",
-    )
-    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
-    result = []
-    for document in database.causes.find({}):
-        document = json_util.dumps(document)
-        document = _replace_oid(document)
-        document = _replace_date(document)
-        result.append(json.loads(document))
-    logger.info(
-        "Completed read all causesÍ",
     )
 
     return result
@@ -145,16 +215,23 @@ def read_doctor_processed_data(question_detail_link) -> list[str]:
     for document in database.doctor_processed_data.find(
         {"question_detail_link": question_detail_link},
     ):
-        document = json_util.dumps(document)
-        document = _replace_oid(document)
-        document = _replace_date(document)
-        result.append(json.loads(document))
+        result.append(_clean_document(document))
     logger.info(
         "Completed read doctor processed data links by question detail link",
         question_detail_link=question_detail_link,
     )
 
     return result
+
+
+# endregion
+
+
+def _clean_document(document):
+    document = json_util.dumps(document)
+    document = _replace_oid(document)
+    document = _replace_date(document)
+    return json.loads(document)
 
 
 def _replace_oid(string):

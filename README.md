@@ -441,7 +441,7 @@ pip install kfp --upgrade
 kubectl apply secretsrolebinding.yaml
 
 # annotate kubernetes service account to use google service account (already provisioned by terraform) that has iam role to read/write to google cloud storage bucket
-PROJECT_ID="<PREFIX>-<ENVIRONMENT>"
+PROJECT_ID="<PROJECT ID>"
 NAMESPACE="kubeflow"
 GSA="gke01-kfp-user@${PROJECT_ID}.iam.gserviceaccount.com"
 KSA="pipeline-runner"

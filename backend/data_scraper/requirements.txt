@@ -1,4 +1,4 @@
 structlog~=22.3.0
-requests~=2.28.1
-beautifulsoup4~=4.11.1
-retry2~=0.9.4
+requests~=2.28.2
+beautifulsoup4~=4.11.2
+retry2~=0.9.5

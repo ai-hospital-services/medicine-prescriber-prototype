@@ -58,12 +58,12 @@ class _AppState extends State<App> {
           // once user is logged in
           SymptomsPage(
               getSubjectiveSymptomList: _data.getSubjectiveSymptomList(),
-              getObjectiveSymptomList: _data.getObjectiveSymptomList(),
+              getAssociatedSymptomList: _data.getAssociatedSymptomList(),
+              getInvestigationList: _data.getInvestigationList(),
               getGenderList: _data.getGenderList(),
-              getEtiologyList: _data.getEtiologyList(),
-              predictCause: _data.predictCause,
-              mapPredictCauseWithEtiology: _data.mapPredictCauseWithEtiology,
-              getDrugList: _data.getDrugList,
+              getAgeGroupList: _data.getAgeGroupList(),
+              predictProvisionalDiagnosis: _data.predictProvisionalDiagnosis,
+              getAdviseList: _data.getAdviseList,
             ),
     );
   }

@@ -15,6 +15,53 @@ def validate_access_token(token, claims) -> bool:
     return oauth2.validate_access_token(token, claims)
 
 
+# region symptoms to causes
+
+
+def read_all_subjective_symptoms() -> list[str]:
+    """Read all subjective symptoms."""
+    return document_db.read_all_subjective_symptoms()
+
+
+def read_all_associated_symptoms() -> list[str]:
+    """Read all associated symptoms."""
+    return document_db.read_all_associated_symptoms()
+
+
+def read_all_gender() -> list[str]:
+    """Read all gender values."""
+    return document_db.read_all_gender()
+
+
+def read_all_age_groups() -> list[str]:
+    """Read all age groups."""
+    return document_db.read_all_age_groups()
+
+
+def read_all_investigations() -> list[str]:
+    """Read all investigations."""
+    return document_db.read_all_investigations()
+
+
+def predict_provisional_diagnosis(
+    subjective_symptoms, associated_symptoms, investigations_done, gender, age
+) -> list[(str, float)]:
+    """Predict provisional diagnosis from symptoms."""
+    return machine_learning.predict_provisional_diagnosis(
+        subjective_symptoms, associated_symptoms, investigations_done, gender, age
+    )
+
+
+def read_advises(provisional_diagnosis) -> list[str]:
+    """Read advised investigations, management and surgical management."""
+    return document_db.read_advises(provisional_diagnosis)
+
+
+# endregion
+
+# region data scrapper
+
+
 def read_doctor_raw_data_links(profile_link) -> list[str]:
     """Read doctor raw data links."""
     return document_db.read_doctor_raw_data_links(profile_link)
@@ -25,19 +72,12 @@ def read_doctor_raw_data(question_detail_link) -> list[str]:
     return document_db.read_doctor_raw_data(question_detail_link)
 
 
-def read_all_symptoms() -> list[str]:
-    """Read all symptoms."""
-    return document_db.read_all_symptoms()
-
-
-def read_all_causes() -> list[str]:
-    """Read all causes."""
-    return document_db.read_all_causes()
-
-
 def read_doctor_processed_data(question_detail_link) -> list[str]:
     """Read doctor processed data."""
     return document_db.read_doctor_processed_data(question_detail_link)
+
+
+# endregion
 
 
 def init() -> None:
