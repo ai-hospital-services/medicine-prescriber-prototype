@@ -5,7 +5,7 @@ RUN apt-get update && apt-get upgrade -y && \
         clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
 
 WORKDIR /
-RUN git clone https://github.com/flutter/flutter.git --depth 1 -b 3.3.9
+RUN git clone https://github.com/flutter/flutter.git --depth 1 -b 3.7.7
 RUN export PATH="$PATH:/flutter/bin" && flutter precache && flutter config --clear-features && \
     flutter config --enable-web --no-enable-linux-desktop --no-enable-macos-desktop \
         --no-enable-windows-desktop --no-single-widget-reload-optimization --no-enable-android \
@@ -19,7 +19,7 @@ RUN export PATH="$PATH:/flutter/bin" && flutter clean && flutter build web
 
 # ---
 
-FROM --platform=linux/arm64 dart:2.18.5
+FROM --platform=linux/arm64 dart:2.19.4
 
 RUN dart pub global activate dhttpd
 
