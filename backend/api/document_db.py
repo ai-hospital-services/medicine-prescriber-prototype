@@ -8,7 +8,7 @@ from bson import json_util
 from pymongo import MongoClient
 from structlog import get_logger
 
-from . import config
+from . import config, user
 
 
 @dataclass(init=True)
@@ -40,6 +40,49 @@ def log_mongodb_status() -> None:
 
 
 # region symptoms to causes
+
+
+def get_user(email_address) -> str:
+    """Get user."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting get user",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    for document in database.users.find({"email_address": email_address}):
+        result = _clean_document(document)
+    logger.info(
+        "Completed get user",
+    )
+
+    return result
+
+
+def upsert_user(user: dict) -> None:
+    """Upsert user."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting upsert user",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    database.users.find_one_and_replace(
+        {
+            "email_address": user["email_address"],
+        },
+        {
+            "email_address": user["email_address"],
+            "login_sub": user["login_sub"],
+            "name": user["name"],
+            "picture_url": user["picture_url"],
+            "profile_url": user["profile_url"],
+            "last_logged_in": user["last_logged_in"],
+        },
+    )
+    logger.info(
+        "Completed upsert user",
+    )
 
 
 def read_all_subjective_symptoms() -> list[str]:

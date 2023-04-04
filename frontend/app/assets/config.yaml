@@ -12,3 +12,6 @@ scopes:
   - "read:age_groups"
   - "predict:provisional_diagnosis"
   - "read:advises"
+  - "openid"
+  - "profile"
+  - "email"

@@ -1,13 +1,47 @@
 """ Module for command line interface (cli). """
 
+import json
 import os
 
 from . import config, document_db, lib, machine_learning, oauth2
 
 
+def _update_user_profile(user_profile, user_info):
+    if not "name" in user_profile or user_profile["name"].strip() == "":
+        user_profile["name"] = user_info.name
+    else:
+        user_profile["name"] = ""
+    user_profile["login_sub"] = user_info.login_sub
+    if (
+        not "picture_url" in user_profile is None
+        or user_profile["picture_url"].strip() == ""
+    ):
+        user_profile["picture_url"] = user_info.picture_url
+    else:
+        user_profile["picture_url"] = ""
+    if (
+        not "profile_url" in user_profile is None
+        or user_profile["profile_url"].strip() == ""
+    ):
+        user_profile["profile_url"] = user_info.profile_url
+    else:
+        user_profile["profile_url"] = ""
+    user_profile["last_logged_in"] = user_info.last_logged_in
+    document_db.upsert_user(user_profile)
+
+
 def get_access_token(authorisation_code) -> str:
     """Get access token using authorisation code."""
-    return oauth2.get_access_token(authorisation_code)
+    access_token = oauth2.get_access_token(authorisation_code)
+    obj = json.loads(access_token)
+    user_info = oauth2.get_user_info(obj["access_token"])
+    if user_info:
+        user_profile = document_db.get_user(user_info.email_address)
+        if not user_profile:
+            return "Error: user is not registered to access!"
+        _update_user_profile(user_profile, user_info)
+        return access_token
+    return None
 
 
 def validate_access_token(token, claims) -> bool:

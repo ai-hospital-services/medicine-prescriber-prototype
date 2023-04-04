@@ -148,14 +148,19 @@ class _LoginState extends State<Login> {
     try {
       final response = await Lib.httpGet(
           url: "${widget._backendAPIURL}/get-access-token/$_authorisationCode");
-      final decodedResponse = jsonDecode(response) as Map;
-      if (decodedResponse["access_token"] == null ||
-          (decodedResponse["access_token"] as String).isEmpty) {
-        result = "User login failure: no access token in response";
+      if (response.startsWith("Error")) {
+        result = "User login failure: $response";
         success = false;
       } else {
-        result = decodedResponse["access_token"] as String;
-        success = true;
+        final decodedResponse = jsonDecode(response) as Map;
+        if (decodedResponse["access_token"] == null ||
+            (decodedResponse["access_token"] as String).isEmpty) {
+          result = "User login failure: no access token in response";
+          success = false;
+        } else {
+          result = decodedResponse["access_token"] as String;
+          success = true;
+        }
       }
     } catch (e) {
       result = "User login failure: $e";

@@ -1,15 +1,17 @@
 """ Module for OAuth2. """
 
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
+from datetime import datetime
+from functools import reduce
 
 import requests
-from cache3 import SafeCache
+from cache3 import MiniCache
 from jwcrypto import jwk, jwt
 from oauthlib import oauth2
 from structlog import get_logger
 
-from . import config
+from . import config, user
 
 
 @dataclass(init=True)
@@ -30,7 +32,7 @@ def init_cache_state() -> None:
     if State.CACHE is not None:
         State.CACHE.clear()
 
-    State.CACHE = SafeCache()
+    State.CACHE = MiniCache(None)
     State.CACHE.timeout = config.CACHE_TIMEOUT
 
     response = requests.get(
@@ -42,6 +44,9 @@ def init_cache_state() -> None:
     )
     State.TOKEN_URL = State.CACHE.get(config.TENANT_OPENID_CONFIGURATION_CACHE_KEY)[
         "token_endpoint"
+    ]
+    State.USERINFO_URL = State.CACHE.get(config.TENANT_OPENID_CONFIGURATION_CACHE_KEY)[
+        "userinfo_endpoint"
     ]
     response = requests.get(
         State.CACHE.get(config.TENANT_OPENID_CONFIGURATION_CACHE_KEY)["jwks_uri"],
@@ -69,6 +74,31 @@ def check_cache() -> None:
     if not State.CACHE.has_key(config.TENANT_OPENID_CONFIGURATION_CACHE_KEY):
         init_cache_state()
     logger.info("Completed check cache")
+
+
+def get_user_info(access_token) -> user.UserInfo:
+    """Get user info using access token."""
+    logger = get_logger()
+
+    logger.info("Starting get user info")
+    if not validate_access_token(access_token, ["openid", "profile", "email"]):
+        return None
+    response = requests.get(
+        State.USERINFO_URL, headers={"Authorization": f"Bearer {access_token}"}
+    )
+    logger.info("Completed get user info")
+    if response.status_code == 200:
+        obj = json.loads(response.text)
+        return user.UserInfo(
+            email_address=obj["email"],
+            name=obj["name"],
+            login_sub=obj["sub"],
+            picture_url=obj["picture"],
+            profile_url=None,
+            last_logged_in=datetime.now(),
+        )
+
+    return None
 
 
 def get_access_token(authorisation_code) -> str:
@@ -110,7 +140,7 @@ def validate_access_token(token, asserted_claims) -> bool:
         token is None
         or asserted_claims is None
         or token.strip() == ""
-        or asserted_claims.strip() == ""
+        or (type(asserted_claims) == str and asserted_claims.strip() == "")
     ):
         logger.error(
             "Empty token or asserted claims",
@@ -148,4 +178,8 @@ def validate_access_token(token, asserted_claims) -> bool:
 
     logger.info("Completed validate access token")
 
+    if type(asserted_claims) == list:
+        return reduce(
+            lambda x, y: y and x, map(lambda ac: ac in scope, asserted_claims)
+        )
     return asserted_claims in scope
