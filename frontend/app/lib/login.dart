@@ -96,8 +96,8 @@ class _LoginState extends State<Login> {
                           _accessCode = result;
                           _accessCodeError = "";
                           _runAfterSuccessfulLogin();
-                          return Row(
-                            children: const <Widget>[
+                          return const Row(
+                            children: <Widget>[
                               Text("User login successful ..."),
                               CircularProgressIndicator(),
                             ],

@@ -5,6 +5,7 @@ audience: "<AUDIENCE>"
 clientID: "<CLIENT ID>"
 symptomsSeparator: "|"
 scopes:
+  - "read:user_profile"
   - "read:subjective_symptoms"
   - "read:associated_symptoms"
   - "read:investigations"

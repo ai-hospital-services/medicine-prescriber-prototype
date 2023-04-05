@@ -31,6 +31,15 @@ def validate_access_token(asserted_claims) -> str:
     return make_response("", 200)
 
 
+@app.route("/get-user-profile/<email_address>", methods=["GET"])
+def get_user_profile(email_address) -> str:
+    """Function on '/get-user-profile' to get user profile."""
+    token = _get_bearer_token()
+    if not core.validate_access_token(token, "read:user_profile"):
+        return make_response("", 401)
+    return _make_response_from_result(core.get_user_profile())
+
+
 # region symptoms to causes
 
 

@@ -5,8 +5,10 @@ import os
 
 from . import config, document_db, lib, machine_learning, oauth2
 
+# region user
 
-def _update_user_profile(user_profile, user_info):
+
+def _update_user_profile(user_profile, user_info) -> None:
     if not "name" in user_profile or user_profile["name"].strip() == "":
         user_profile["name"] = user_info.name
     else:
@@ -48,6 +50,15 @@ def validate_access_token(token, claims) -> bool:
     """Validate access token and verify claims."""
     return oauth2.validate_access_token(token, claims)
 
+
+def get_user_profile(email_address) -> str:
+    user_profile = document_db.get_user(email_address)
+    if not user_profile:
+        return "Error: user is not registered to access!"
+    return user_profile
+
+
+# endregion
 
 # region symptoms to causes
 
@@ -139,10 +150,12 @@ def init() -> None:
     config.MONGODB_DATABASE = os.environ.get(
         "MONGODB_DATABASE", default=config.MONGODB_DATABASE
     )
-    config.WEB_REQUEST_TIMEOUT = os.environ.get(
-        "WEB_REQUEST_TIMEOUT", default=config.WEB_REQUEST_TIMEOUT
+    config.WEB_REQUEST_TIMEOUT_SECONDS = os.environ.get(
+        "WEB_REQUEST_TIMEOUT_SECONDS", default=config.WEB_REQUEST_TIMEOUT_SECONDS
     )
-    config.CACHE_TIMEOUT = os.environ.get("CACHE_TIMEOUT", default=config.CACHE_TIMEOUT)
+    config.CACHE_TIMEOUT_SECONDS = os.environ.get(
+        "CACHE_TIMEOUT_SECONDS", default=config.CACHE_TIMEOUT_SECONDS
+    )
     config.TENANT_DOMAIN = os.environ.get("TENANT_DOMAIN", default=config.TENANT_DOMAIN)
     config.TENANT_OPENID_CONFIGURATION_CACHE_KEY = os.environ.get(
         "TENANT_OPENID_CONFIGURATION_CACHE_KEY",

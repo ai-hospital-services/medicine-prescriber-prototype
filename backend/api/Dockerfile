@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64 python:3.10.9-slim-buster
+FROM --platform=linux/arm64 python:3.10.10-slim-buster
 
 WORKDIR /backend
 COPY . api

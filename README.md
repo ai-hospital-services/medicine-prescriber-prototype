@@ -55,7 +55,7 @@ Table of Contents:
 
 ## Built with
 - Flutter v3
-- Python v3.10 & Flask v2.2
+- Python v3.10 & Flask v2.3
 - Tensorflow v2
 - MongoDB v6
 - Docker

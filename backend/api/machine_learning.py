@@ -54,7 +54,7 @@ def predict_provisional_diagnosis(
         + config.SYMPTOMS_SEPARATOR
         + associated_symptoms
         + config.SYMPTOMS_SEPARATOR
-        + investigations_done
+        + (investigations_done if investigations_done else "")
         + config.SYMPTOMS_SEPARATOR
         + gender
         + config.SYMPTOMS_SEPARATOR
@@ -66,7 +66,9 @@ def predict_provisional_diagnosis(
 
     # validate arguments
     for item in symptoms_corpus.split(config.SYMPTOMS_SEPARATOR):
-        if not item in list(State.SYMPTOMS_TOKENISER.word_index.keys()):
+        if not item.strip() == "" and not item in list(
+            State.SYMPTOMS_TOKENISER.word_index.keys()
+        ):
             message = f"Error: invalid or unknown symptom - {item}"
             logger.error("Completed predict provisional diagnosis", message=message)
             raise Exception(message)

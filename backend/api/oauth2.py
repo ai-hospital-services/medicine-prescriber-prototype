@@ -33,14 +33,15 @@ def init_cache_state() -> None:
         State.CACHE.clear()
 
     State.CACHE = MiniCache(None)
-    State.CACHE.timeout = config.CACHE_TIMEOUT
 
     response = requests.get(
         f"https://{config.TENANT_DOMAIN}/.well-known/openid-configuration",
-        timeout=config.WEB_REQUEST_TIMEOUT,
+        timeout=config.WEB_REQUEST_TIMEOUT_SECONDS,
     )
     State.CACHE.set(
-        key=config.TENANT_OPENID_CONFIGURATION_CACHE_KEY, value=response.json()
+        key=config.TENANT_OPENID_CONFIGURATION_CACHE_KEY,
+        value=response.json(),
+        timeout=config.CACHE_TIMEOUT_SECONDS,
     )
     State.TOKEN_URL = State.CACHE.get(config.TENANT_OPENID_CONFIGURATION_CACHE_KEY)[
         "token_endpoint"
@@ -50,7 +51,7 @@ def init_cache_state() -> None:
     ]
     response = requests.get(
         State.CACHE.get(config.TENANT_OPENID_CONFIGURATION_CACHE_KEY)["jwks_uri"],
-        timeout=config.WEB_REQUEST_TIMEOUT,
+        timeout=config.WEB_REQUEST_TIMEOUT_SECONDS,
     )
     State.JWKS = jwk.JWKSet.from_json(keyset=response.content)
 
@@ -124,7 +125,7 @@ def get_access_token(authorisation_code) -> str:
         url=request[0],
         headers=request[1],
         data=request[2],
-        timeout=config.WEB_REQUEST_TIMEOUT,
+        timeout=config.WEB_REQUEST_TIMEOUT_SECONDS,
     )
     logger.info("Completed get access token")
 
