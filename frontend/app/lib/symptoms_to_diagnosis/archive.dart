@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:multiple_search_selection/multiple_search_selection.dart';
-import 'data.dart';
-import 'config.dart';
+import '../util/config.dart';
+import '../util/types.dart';
 
 class SymptomsPage extends StatefulWidget {
   final Future<List<SubjectiveSymptom>> getSubjectiveSymptomList;
@@ -12,15 +12,16 @@ class SymptomsPage extends StatefulWidget {
   final Function predictProvisionalDiagnosis;
   final Function getAdviseList;
 
-  const SymptomsPage(
-      {super.key,
-      required this.getSubjectiveSymptomList,
-      required this.getAssociatedSymptomList,
-      required this.getInvestigationList,
-      required this.getGenderList,
-      required this.getAgeGroupList,
-      required this.predictProvisionalDiagnosis,
-      required this.getAdviseList});
+  const SymptomsPage({
+    super.key,
+    required this.getSubjectiveSymptomList,
+    required this.getAssociatedSymptomList,
+    required this.getInvestigationList,
+    required this.getGenderList,
+    required this.getAgeGroupList,
+    required this.predictProvisionalDiagnosis,
+    required this.getAdviseList,
+  });
 
   @override
   State<StatefulWidget> createState() => _SymptomsPageState();
@@ -28,6 +29,7 @@ class SymptomsPage extends StatefulWidget {
 
 class _SymptomsPageState extends State<SymptomsPage> {
   List<SubjectiveSymptom>? _subjectiveSymptomList;
+  late final TextEditingController _subjectiveSymptomsController;
   List<SubjectiveSymptom>? _selectedSubjectiveSymptomList;
   List<AssociatedSymptom>? _associatedSymptomList;
   List<AssociatedSymptom>? _selectedAssociatedSymptomList;
@@ -42,6 +44,18 @@ class _SymptomsPageState extends State<SymptomsPage> {
   int _selectedProvisionalDiagnosisIndex = -1;
   String? _selectedProvisionalDiagnosis;
   Future<List<ProvisionalDiagnosisAdvise>>? _adviseList;
+
+  @override
+  void initState() {
+    super.initState();
+    _subjectiveSymptomsController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _subjectiveSymptomsController.dispose();
+    super.dispose();
+  }
 
   void _setOutputState() {
     _isPredictCauseButtonActive = _selectedSubjectiveSymptomList != null &&
@@ -66,54 +80,60 @@ class _SymptomsPageState extends State<SymptomsPage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Row(
-              children: [
-                const Text("Select subjective symptoms: ",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                FutureBuilder(
-                  future: widget.getSubjectiveSymptomList,
-                  builder: (context, snapshot) {
-                    switch (snapshot.connectionState) {
-                      case ConnectionState.waiting:
-                        return const CircularProgressIndicator();
-                      case ConnectionState.done:
-                      default:
-                        if (snapshot.hasData) {
-                          return Expanded(
-                              child: MultipleSearchSelection<SubjectiveSymptom>(
-                            showedItemsBoxDecoration:
-                                const BoxDecoration(color: Colors.lightBlue),
-                            pickedItemsBoxDecoration:
-                                const BoxDecoration(color: Colors.lightBlue),
-                            fieldToCheck: (item) => item.symptom,
-                            fuzzySearch: FuzzySearch.jaro,
-                            items: () {
-                              _subjectiveSymptomList =
-                                  (snapshot.data as List<SubjectiveSymptom>);
-                              return _subjectiveSymptomList!;
-                            }(),
-                            itemBuilder: (item, _) => Text(item.symptom),
-                            itemsVisibility: ShowedItemsVisibility.alwaysOn,
-                            maximumShowItemsHeight: 100,
-                            onPickedChange: (items) {
-                              setState(() {
-                                _selectedSubjectiveSymptomList = items;
-                                _setOutputState();
+            Row(children: [
+              Expanded(
+                  child: TextField(
+                      controller: _subjectiveSymptomsController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        label: Text("Select subjective symptoms ...",
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      onTap: () {
+                        widget.getSubjectiveSymptomList.then((value) {
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  // content: Expanded(child: Text("hello"))
+                                  content: Expanded(
+                                    child: MultipleSearchSelection<
+                                        SubjectiveSymptom>(
+                                      showedItemsBoxDecoration:
+                                          const BoxDecoration(
+                                              color: Colors.lightBlue),
+                                      pickedItemsBoxDecoration:
+                                          const BoxDecoration(
+                                              color: Colors.lightBlue),
+                                      fieldToCheck: (item) => item.symptom,
+                                      fuzzySearch: FuzzySearch.jaro,
+                                      items: () {
+                                        _subjectiveSymptomList = value;
+                                        return _subjectiveSymptomList!;
+                                      }(),
+                                      itemBuilder: (item, _) =>
+                                          Text(item.symptom),
+                                      itemsVisibility:
+                                          ShowedItemsVisibility.alwaysOn,
+                                      maximumShowItemsHeight: 100,
+                                      onPickedChange: (items) {
+                                        setState(() {
+                                          _selectedSubjectiveSymptomList =
+                                              items;
+                                          _setOutputState();
+                                          Navigator.of(context).pop();
+                                        });
+                                      },
+                                      pickedItemBuilder: (item) =>
+                                          Text("${item.symptom};"),
+                                      searchField: const TextField(),
+                                    ),
+                                  ),
+                                );
                               });
-                            },
-                            pickedItemBuilder: (item) =>
-                                Text("${item.symptom};"),
-                          ));
-                        } else if (snapshot.hasError) {
-                          return Text("Error: ${snapshot.error}");
-                        } else {
-                          return const SizedBox.shrink();
-                        }
-                    }
-                  },
-                ),
-              ],
-            ),
+                        });
+                      })),
+            ]),
             const Divider(
               height: 20,
               thickness: 2,
@@ -181,6 +201,7 @@ class _SymptomsPageState extends State<SymptomsPage> {
                             },
                             pickedItemBuilder: (item) =>
                                 Text("${item.symptom};"),
+                            searchField: const TextField(),
                           ));
                         } else if (snapshot.hasError) {
                           return Text("Error: ${snapshot.error}");
@@ -235,6 +256,7 @@ class _SymptomsPageState extends State<SymptomsPage> {
                               });
                             },
                             pickedItemBuilder: (item) => Text("${item.name};"),
+                            searchField: const TextField(),
                           ));
                         } else if (snapshot.hasError) {
                           return Text("Error: ${snapshot.error}");

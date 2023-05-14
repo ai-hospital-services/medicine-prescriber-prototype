@@ -2,7 +2,6 @@
 
 import json
 from dataclasses import dataclass
-from datetime import datetime
 from functools import reduce
 
 import requests
@@ -77,15 +76,15 @@ def check_cache() -> None:
     logger.info("Completed check cache")
 
 
-def get_user_info(access_token) -> user.UserInfo:
+def get_user_info(token) -> user.UserInfo:
     """Get user info using access token."""
     logger = get_logger()
 
     logger.info("Starting get user info")
-    if not validate_access_token(access_token, ["openid", "profile", "email"]):
+    if not validate_access_token(token, ["openid", "profile", "email"]):
         return None
     response = requests.get(
-        State.USERINFO_URL, headers={"Authorization": f"Bearer {access_token}"}
+        State.USERINFO_URL, headers={"Authorization": f"Bearer {token}"}
     )
     logger.info("Completed get user info")
     if response.status_code == 200:
@@ -95,8 +94,6 @@ def get_user_info(access_token) -> user.UserInfo:
             name=obj["name"],
             login_sub=obj["sub"],
             picture_url=obj["picture"],
-            profile_url=None,
-            last_logged_in=datetime.now(),
         )
 
     return None

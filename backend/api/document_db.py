@@ -8,7 +8,7 @@ from bson import json_util
 from pymongo import MongoClient
 from structlog import get_logger
 
-from . import config, user
+from . import config
 
 
 @dataclass(init=True)
@@ -49,6 +49,7 @@ def get_user(email_address) -> str:
     logger.info(
         "Starting get user",
     )
+    result = None
     database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
     for document in database.users.find({"email_address": email_address}):
         result = _clean_document(document)
@@ -73,11 +74,37 @@ def upsert_user(user: dict) -> None:
         },
         {
             "email_address": user["email_address"],
-            "login_sub": user["login_sub"],
-            "name": user["name"],
-            "picture_url": user["picture_url"],
-            "profile_url": user["profile_url"],
-            "last_logged_in": user["last_logged_in"],
+            "login_sub": None
+            if "login_sub" not in user
+            or user["login_sub"] is None
+            or user["login_sub"].strip() == ""
+            else user["login_sub"],
+            "user_type": None
+            if "user_type" not in user
+            or user["user_type"] is None
+            or user["user_type"].strip() == ""
+            else user["user_type"],
+            "name": None
+            if "name" not in user or user["name"] is None or user["name"].strip() == ""
+            else user["name"],
+            "picture_url": None
+            if "picture_url" not in user
+            or user["picture_url"] is None
+            or user["picture_url"].strip() == ""
+            else user["picture_url"],
+            "profile_url": None
+            if "profile_url" not in user
+            or user["profile_url"] is None
+            or user["profile_url"].strip() == ""
+            else user["profile_url"],
+            "remarks": None
+            if "remarks" not in user
+            or user["remarks"] is None
+            or user["remarks"].strip() == ""
+            else user["last_logged_in"],
+            "last_logged_in": None
+            if "last_logged_in" not in user
+            else user["last_logged_in"],
         },
     )
     logger.info(

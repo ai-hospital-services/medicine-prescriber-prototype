@@ -2,47 +2,63 @@
 
 import json
 import os
+from datetime import datetime
+
+from structlog import get_logger
 
 from . import config, document_db, lib, machine_learning, oauth2
 
 # region user
 
 
-def _update_user_profile(user_profile, user_info) -> None:
-    if not "name" in user_profile or user_profile["name"].strip() == "":
+def _save_user_profile_from_info(user_profile, user_info) -> None:
+    if (
+        not "name" in user_profile
+        or user_profile["name"] is None
+        or user_profile["name"].strip() == ""
+    ):
         user_profile["name"] = user_info.name
-    else:
-        user_profile["name"] = ""
     user_profile["login_sub"] = user_info.login_sub
     if (
-        not "picture_url" in user_profile is None
+        not "picture_url" in user_profile
+        or user_profile["picture_url"] is None
         or user_profile["picture_url"].strip() == ""
     ):
         user_profile["picture_url"] = user_info.picture_url
-    else:
-        user_profile["picture_url"] = ""
-    if (
-        not "profile_url" in user_profile is None
-        or user_profile["profile_url"].strip() == ""
-    ):
-        user_profile["profile_url"] = user_info.profile_url
-    else:
-        user_profile["profile_url"] = ""
-    user_profile["last_logged_in"] = user_info.last_logged_in
+    user_profile["last_logged_in"] = datetime.utcnow()
+
     document_db.upsert_user(user_profile)
 
 
 def get_access_token(authorisation_code) -> str:
     """Get access token using authorisation code."""
+    logger = get_logger()
+    logger.info("Starting getting access token")
+
     access_token = oauth2.get_access_token(authorisation_code)
     obj = json.loads(access_token)
+    if "error" in obj and "error_description" in obj:
+        logger.error(
+            "Error getting access token using authorisation code",
+            error=obj["error"],
+            error_description=obj["error_description"],
+        )
+        return f"Error: {obj['error_description']}"
     user_info = oauth2.get_user_info(obj["access_token"])
     if user_info:
         user_profile = document_db.get_user(user_info.email_address)
         if not user_profile:
-            return "Error: user is not registered to access!"
-        _update_user_profile(user_profile, user_info)
+            error = "Error: user is not registered to access!"
+            logger.error(
+                "Error getting access token using authorisation code",
+                error=error,
+                email_address=user_info.email_address,
+            )
+            return error
+        _save_user_profile_from_info(user_profile, user_info)
         return access_token
+
+    logger.info("Completed getting access token")
     return None
 
 
@@ -51,11 +67,30 @@ def validate_access_token(token, claims) -> bool:
     return oauth2.validate_access_token(token, claims)
 
 
-def get_user_profile(email_address) -> str:
-    user_profile = document_db.get_user(email_address)
-    if not user_profile:
-        return "Error: user is not registered to access!"
-    return user_profile
+def get_user_profile(token) -> str:
+    """Get user profile."""
+    logger = get_logger()
+    logger.info("Starting getting user profile")
+
+    user_info = oauth2.get_user_info(token)
+    if user_info:
+        user_profile = document_db.get_user(user_info.email_address)
+        if not user_profile:
+            error = "Error: user is not registered to access!"
+            logger.error(
+                "Error getting user profile",
+                error=error,
+            )
+            return error
+        return user_profile
+
+    logger.info("Completed getting user profile")
+    return None
+
+
+def save_user_profile(user_profile: dict) -> None:
+    """Save user profile."""
+    document_db.upsert_user(user_profile)
 
 
 # endregion

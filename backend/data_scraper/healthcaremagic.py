@@ -264,7 +264,7 @@ def fetch_premium_question_answer_list(
             doctor_profile_link=question.doctor_profile_link,
             question_type=QuestionType.PREMIUM,
             question_detail_link=question.question_detail_link,
-            last_updated=datetime.now(),
+            last_updated=datetime.utcnow(),
         )
         soup = BeautifulSoup(response.content, "html.parser")
 

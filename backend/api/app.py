@@ -31,13 +31,23 @@ def validate_access_token(asserted_claims) -> str:
     return make_response("", 200)
 
 
-@app.route("/get-user-profile/<email_address>", methods=["GET"])
-def get_user_profile(email_address) -> str:
+@app.route("/get-user-profile", methods=["GET"])
+def get_user_profile() -> str:
     """Function on '/get-user-profile' to get user profile."""
     token = _get_bearer_token()
     if not core.validate_access_token(token, "read:user_profile"):
         return make_response("", 401)
-    return _make_response_from_result(core.get_user_profile())
+    return _make_response_from_result(core.get_user_profile(token))
+
+
+@app.route("/save-user-profile", methods=["PUT"])
+def save_user_profile() -> str:
+    """Function on '/save-user-profile' to save user profile."""
+    token = _get_bearer_token()
+    if not core.validate_access_token(token, "save:user_profile"):
+        return make_response("", 401)
+    core.save_user_profile(request.form)
+    return make_response()
 
 
 # region symptoms to causes
