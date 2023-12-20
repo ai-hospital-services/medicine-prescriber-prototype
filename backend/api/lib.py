@@ -58,23 +58,6 @@ def log_config_settings() -> None:
     logger = get_logger()
 
     logger.info("Starting log config settings in DEBUG mode")
-    logger.debug("", DEBUG_MODE=config.DEBUG_MODE)
-    logger.debug("", PORT=config.PORT)
-    logger.debug(
-        "",
-        SYMPTOMS_TOKENISER_FILE=config.SYMPTOMS_TOKENISER_FILE,
-    )
-    logger.debug("", CAUSES_TOKENISER_FILE=config.CAUSES_TOKENISER_FILE)
-    logger.debug("", MODEL_FILE=config.MODEL_FILE)
-    logger.debug("", WEB_REQUEST_TIMEOUT=config.WEB_REQUEST_TIMEOUT)
-    logger.debug("", CACHE_TIMEOUT=config.CACHE_TIMEOUT)
-    logger.debug("", TENANT_DOMAIN=config.TENANT_DOMAIN)
-    logger.debug(
-        "",
-        TENANT_OPENID_CONFIGURATION_CACHE_KEY=config.TENANT_OPENID_CONFIGURATION_CACHE_KEY,
-    )
-    logger.debug("", AUTHORISATION_HEADER_KEY=config.AUTHORISATION_HEADER_KEY)
-    logger.debug("", REDIRECT_URL=config.REDIRECT_URL)
-    logger.debug("", CLIENT_ID=config.CLIENT_ID)
-    logger.debug("", CLIENT_SECRET=config.CLIENT_SECRET)
+    for configuration in [attr for attr in dir(config) if not attr.startswith("__")]:
+        logger.debug(configuration, value=config.__dict__[configuration])
     logger.info("Completed log config settings in DEBUG mode")

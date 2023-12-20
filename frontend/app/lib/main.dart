@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'config.dart';
-import 'lib.dart';
-import 'data.dart';
-import 'login.dart';
-import 'symptoms_page.dart';
+import 'symptoms_to_diagnosis/archive.dart';
+import 'user/login.dart';
+import 'util/config.dart';
+import 'util/data.dart';
+import 'util/types.dart';
+import 'util/util.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,28 +21,25 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> {
   late final Data _data;
-  late bool _loginFlag;
+  late LoggedInState _loggedInState;
 
   @override
   void initState() {
     super.initState();
-    Lib.setInvalidLoginState = _setInvalidLoginState;
     _data = Data();
-    _loginFlag = false;
+    _loggedInState = _data.getLoggedInState();
+    Util.setLoginInvalidState = _setLoginInvalidState;
   }
 
-  void _setValidLoginState({required String accessToken}) {
-    if (accessToken.isEmpty) return;
-    _data.set(accessToken: accessToken);
+  void _setLoginInvalidState() {
     setState(() {
-      _loginFlag = true;
+      _data.resetUserLogin();
     });
   }
 
-  void _setInvalidLoginState() {
-    _data.set(accessToken: null);
+  void _resetLoggedInState() {
     setState(() {
-      _loginFlag = false;
+      _loggedInState = _data.getLoggedInState();
     });
   }
 
@@ -49,21 +47,33 @@ class _AppState extends State<App> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "AI-HOSPITAL.SERVICES",
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: (!_loginFlag)
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: (_loggedInState != LoggedInState.loggedIn)
           ?
           // if user is not logged in
-          Login(setValidLoginState: _setValidLoginState)
+          Login(
+              getLoggedInState: _data.getLoggedInState,
+              resetUserLogin: _data.resetUserLogin,
+              getAuthorisationCode: _data.getAuthorisationCode,
+              getAccessToken: _data.getAccessToken,
+              getUserProfile: _data.getUserProfile,
+              readCachedUserProfile: _data.readCachedUserProfile,
+              saveUserProfile: _data.saveUserProfile,
+              onCompletion: _resetLoggedInState,
+            )
           :
           // once user is logged in
           SymptomsPage(
               getSubjectiveSymptomList: _data.getSubjectiveSymptomList(),
-              getObjectiveSymptomList: _data.getObjectiveSymptomList(),
+              getAssociatedSymptomList: _data.getAssociatedSymptomList(),
+              getInvestigationList: _data.getInvestigationList(),
               getGenderList: _data.getGenderList(),
-              getEtiologyList: _data.getEtiologyList(),
-              predictCause: _data.predictCause,
-              mapPredictCauseWithEtiology: _data.mapPredictCauseWithEtiology,
-              getDrugList: _data.getDrugList,
+              getAgeGroupList: _data.getAgeGroupList(),
+              predictProvisionalDiagnosis: _data.predictProvisionalDiagnosis,
+              getAdviseList: _data.getAdviseList,
             ),
     );
   }

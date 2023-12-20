@@ -29,7 +29,8 @@
                 // "MONGODB_URL": "mongodb://<USER>:<PASSWORD>@localhost:27017/ai_hospital_services?authMechanism=DEFAULT&authSource=ai_hospital_services",
                 "TENANT_DOMAIN": "<TENANT DOMAIN>",
                 "CLIENT_ID": "<CLIENT ID>",
-                "CLIENT_SECRET": "<CLIENT SECRET>"
+                "CLIENT_SECRET": "<CLIENT SECRET>",
+                // "REDIRECT_URL": "<REDIRECT_URL>"
             },
             "args": [
                 "--debug-mode=true",
@@ -46,6 +47,35 @@
             "args": [
                 "-v",
                 "--cov=api"
+            ]
+        },
+        {
+            "name": "Python: data feeder",
+            "type": "python",
+            "request": "launch",
+            "module": "data_feeder.main",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/backend",
+            "env": {
+                // "MONGODB_URL": "mongodb://<USER>:<PASSWORD>@localhost:27017/ai_hospital_services?authMechanism=DEFAULT&authSource=ai_hospital_services",
+            },
+            "args": [
+                "--debug-mode=true",
+            ]
+        },
+        {
+            "name": "Python: data scraper",
+            "type": "python",
+            "request": "launch",
+            "module": "data_scraper.main",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/backend",
+            "env": {
+                // "MONGODB_URL": "mongodb://<USER>:<PASSWORD>@localhost:27017/ai_hospital_services?authMechanism=DEFAULT&authSource=ai_hospital_services",
+            },
+            "args": [
+                "--debug-mode=true",
+                "--doctor-profile-link=https://doctor.healthcaremagic.com/doctors/dr-t-chandrakant/67188"
             ]
         },
     ]

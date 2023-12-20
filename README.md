@@ -55,14 +55,14 @@ Table of Contents:
 
 ## Built with
 - Flutter v3
-- Python v3.9 & Flask v2.2
+- Python v3.10 & Flask v2.3
 - Tensorflow v2
 - MongoDB v6
 - Docker
 - Kubernetes & Helm chart
-- Flux CD v0.35
-- ingress-nginx controller v4.2.5
-- cert-manager for letsencrypt v1.9.1
+- ingress-nginx controller v4.5.2
+- cert-manager for letsencrypt v1.11.0
+- Flux CD v0.41.1
 - Kubeflow standalone pipelines v1.8.5
 - Github workflows
 
@@ -79,7 +79,7 @@ To get a local copy up and running, follow these steps.
 - Install gcloud cli: https://cloud.google.com/sdk/docs/install
 ```sh
 # create a virtual environment
-# assuming you have "python3 --version" = "Python 3.9.13" installed in the current terminal session
+# assuming you have "python3 --version" = "Python 3.10.9" installed in the current terminal session
 python3 -m venv ./venv
 
 # activate virtual environment
@@ -193,7 +193,7 @@ helm upgrade -i ingress-nginx ingress-nginx \
   --repo https://kubernetes.github.io/ingress-nginx \
   --namespace ingress-nginx \
   --create-namespace \
-  --version 4.2.5 \
+  --version 4.5.2 \
   -f nginx-ingress-values.yaml \
   -f nginx-ingress-values-secret.yaml
 
@@ -209,7 +209,7 @@ helm upgrade -i cert-manager cert-manager \
     --repo "https://charts.jetstack.io" \
     --namespace cert-manager \
     --create-namespace \
-    --version v1.9.1 \
+    --version v1.11.0 \
     -f cert-manager-values.yaml --dry-run
 
 # if you want to stop and remove helm chart and namespace
@@ -220,7 +220,7 @@ kubectl delete namespace cert-manager
 Install flux cd
 ```sh
 # change directory
-cd .deplpoy/clusters/gke01
+cd .deploy/clusters/gke01
 
 # install flux system
 kubectl apply -f flux-system/flux-system.yaml
@@ -441,7 +441,7 @@ pip install kfp --upgrade
 kubectl apply secretsrolebinding.yaml
 
 # annotate kubernetes service account to use google service account (already provisioned by terraform) that has iam role to read/write to google cloud storage bucket
-PROJECT_ID="<PREFIX>-<ENVIRONMENT>"
+PROJECT_ID="<PROJECT ID>"
 NAMESPACE="kubeflow"
 GSA="gke01-kfp-user@${PROJECT_ID}.iam.gserviceaccount.com"
 KSA="pipeline-runner"

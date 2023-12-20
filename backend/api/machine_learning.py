@@ -31,31 +31,46 @@ def configure() -> None:
     State.MODEL = tf.keras.models.load_model(config.MODEL_FILE)
 
 
-def predict_cause(
-    subjective_symptoms, objective_symptoms, gender
+def predict_provisional_diagnosis(
+    subjective_symptoms, associated_symptoms, investigations_done, gender, age
 ) -> list[(str, float)]:
-    """Predict cause from symptoms."""
+    """Predict provisional diagnosis from symptoms."""
     logger = get_logger()
-    logger.info("Starting predict cause", subjective_symptoms=subjective_symptoms)
-    logger.debug("", objective_symptoms=objective_symptoms, gender=gender)
+    logger.info(
+        "Starting predict provisional diagnosis",
+        subjective_symptoms=subjective_symptoms,
+    )
+    logger.debug(
+        "",
+        associated_symptoms=associated_symptoms,
+        investigations_done=investigations_done,
+        gender=gender,
+        age=age,
+    )
 
     # prepare symptoms corpus
     symptoms_corpus = (
         subjective_symptoms
         + config.SYMPTOMS_SEPARATOR
-        + objective_symptoms
+        + associated_symptoms
+        + config.SYMPTOMS_SEPARATOR
+        + (investigations_done if investigations_done else "")
         + config.SYMPTOMS_SEPARATOR
         + gender
+        + config.SYMPTOMS_SEPARATOR
+        + age
     )
     symptoms_corpus = symptoms_corpus.split(config.SYMPTOMS_SEPARATOR)
-    symptoms_corpus = [str(item).lower().strip() for item in symptoms_corpus]
+    symptoms_corpus = [str(item).strip().lower() for item in symptoms_corpus]
     symptoms_corpus = f"{config.SYMPTOMS_SEPARATOR}".join(symptoms_corpus)
 
     # validate arguments
     for item in symptoms_corpus.split(config.SYMPTOMS_SEPARATOR):
-        if not item in list(State.SYMPTOMS_TOKENISER.word_index.keys()):
+        if not item.strip() == "" and not item in list(
+            State.SYMPTOMS_TOKENISER.word_index.keys()
+        ):
             message = f"Error: invalid or unknown symptom - {item}"
-            logger.error("Completed predict cause", message=message)
+            logger.error("Completed predict provisional diagnosis", message=message)
             raise Exception(message)
 
     symptoms_sequences = State.SYMPTOMS_TOKENISER.texts_to_sequences([symptoms_corpus])
@@ -71,20 +86,23 @@ def predict_cause(
     response = [
         # first most probable
         (
-            State.CAUSES_TOKENISER.index_word[causes_rankings[-1] + 1],
             round(causes_probabilities[causes_rankings[-1]] * 100, 2),
+            State.CAUSES_TOKENISER.index_word[causes_rankings[-1] + 1],
         ),
         # second most probable
         (
-            State.CAUSES_TOKENISER.index_word[causes_rankings[-2] + 1],
             round(causes_probabilities[causes_rankings[-2]] * 100, 2),
+            State.CAUSES_TOKENISER.index_word[causes_rankings[-2] + 1],
         ),
         # third most probable
         (
-            State.CAUSES_TOKENISER.index_word[causes_rankings[-3] + 1],
             round(causes_probabilities[causes_rankings[-3]] * 100, 2),
+            State.CAUSES_TOKENISER.index_word[causes_rankings[-3] + 1],
         ),
     ]
-    logger.info("Completed predict cause", subjective_symptom=subjective_symptoms)
+    logger.info(
+        "Completed predict provisional diagnosis",
+        subjective_symptom=subjective_symptoms,
+    )
 
     return response

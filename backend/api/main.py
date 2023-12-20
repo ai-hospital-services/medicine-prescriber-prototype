@@ -1,8 +1,101 @@
 """ Module for command line interface (cli). """
 
+import json
 import os
+from datetime import datetime
+
+from structlog import get_logger
 
 from . import config, document_db, lib, machine_learning, oauth2
+
+# region user
+
+
+def _save_user_profile_from_info(user_profile, user_info) -> None:
+    if (
+        not "name" in user_profile
+        or user_profile["name"] is None
+        or user_profile["name"].strip() == ""
+    ):
+        user_profile["name"] = user_info.name
+    user_profile["login_sub"] = user_info.login_sub
+    if (
+        not "picture_url" in user_profile
+        or user_profile["picture_url"] is None
+        or user_profile["picture_url"].strip() == ""
+    ):
+        user_profile["picture_url"] = user_info.picture_url
+    user_profile["last_logged_in"] = datetime.utcnow()
+
+    document_db.upsert_user(user_profile)
+
+
+def get_access_token(authorisation_code) -> str:
+    """Get access token using authorisation code."""
+    logger = get_logger()
+    logger.info("Starting getting access token")
+
+    access_token = oauth2.get_access_token(authorisation_code)
+    obj = json.loads(access_token)
+    if "error" in obj and "error_description" in obj:
+        logger.error(
+            "Error getting access token using authorisation code",
+            error=obj["error"],
+            error_description=obj["error_description"],
+        )
+        return f"Error: {obj['error_description']}"
+    user_info = oauth2.get_user_info(obj["access_token"])
+    if user_info:
+        user_profile = document_db.get_user(user_info.email_address)
+        if not user_profile:
+            error = "Error: user is not registered to access!"
+            logger.error(
+                "Error getting access token using authorisation code",
+                error=error,
+                email_address=user_info.email_address,
+            )
+            return error
+        _save_user_profile_from_info(user_profile, user_info)
+        return access_token
+
+    logger.info("Completed getting access token")
+    return None
+
+
+def validate_access_token(token, claims) -> bool:
+    """Validate access token and verify claims."""
+    return oauth2.validate_access_token(token, claims)
+
+
+def get_user_profile(token) -> str:
+    """Get user profile."""
+    logger = get_logger()
+    logger.info("Starting getting user profile")
+
+    user_info = oauth2.get_user_info(token)
+    if user_info:
+        user_profile = document_db.get_user(user_info.email_address)
+        if not user_profile:
+            error = "Error: user is not registered to access!"
+            logger.error(
+                "Error getting user profile",
+                error=error,
+            )
+            return error
+        return user_profile
+
+    logger.info("Completed getting user profile")
+    return None
+
+
+def save_user_profile(user_profile: dict) -> None:
+    """Save user profile."""
+    document_db.upsert_user(user_profile)
+
+
+# endregion
+
+# region symptoms to causes
 
 
 def read_all_subjective_symptoms() -> list[str]:
@@ -10,43 +103,61 @@ def read_all_subjective_symptoms() -> list[str]:
     return document_db.read_all_subjective_symptoms()
 
 
-def read_all_objective_symptoms() -> list[str]:
-    """Read all objective symptoms."""
-    return document_db.read_all_objective_symptoms()
+def read_all_associated_symptoms() -> list[str]:
+    """Read all associated symptoms."""
+    return document_db.read_all_associated_symptoms()
 
 
-def predict_cause(
-    subjective_symptoms, objective_symptoms, gender
+def read_all_gender() -> list[str]:
+    """Read all gender values."""
+    return document_db.read_all_gender()
+
+
+def read_all_age_groups() -> list[str]:
+    """Read all age groups."""
+    return document_db.read_all_age_groups()
+
+
+def read_all_investigations() -> list[str]:
+    """Read all investigations."""
+    return document_db.read_all_investigations()
+
+
+def predict_provisional_diagnosis(
+    subjective_symptoms, associated_symptoms, investigations_done, gender, age
 ) -> list[(str, float)]:
-    """Predict cause from symptoms."""
-    return machine_learning.predict_cause(
-        subjective_symptoms, objective_symptoms, gender
+    """Predict provisional diagnosis from symptoms."""
+    return machine_learning.predict_provisional_diagnosis(
+        subjective_symptoms, associated_symptoms, investigations_done, gender, age
     )
 
 
-def read_all_etiologies() -> list[str]:
-    """Read all etiologies data."""
-    return document_db.read_all_etiologies()
+def read_advises(provisional_diagnosis) -> list[str]:
+    """Read advised investigations, management and surgical management."""
+    return document_db.read_advises(provisional_diagnosis)
 
 
-def read_etiology(subjective_symptom_id, cause) -> str:
-    """Read etiology data by subjective symptom and cause."""
-    return document_db.read_etiology(subjective_symptom_id, cause)
+# endregion
+
+# region data scrapper
 
 
-def read_drugs(etiology_id) -> list[str]:
-    """Read drugs by etiology."""
-    return document_db.read_drugs(etiology_id)
+def read_doctor_raw_data_links(profile_link) -> list[str]:
+    """Read doctor raw data links."""
+    return document_db.read_doctor_raw_data_links(profile_link)
 
 
-def get_access_token(authorisation_code) -> str:
-    """Get access token using authorisation code."""
-    return oauth2.get_access_token(authorisation_code)
+def read_doctor_raw_data(question_detail_link) -> list[str]:
+    """Read doctor raw data."""
+    return document_db.read_doctor_raw_data(question_detail_link)
 
 
-def validate_access_token(token, claims) -> bool:
-    """Validate access token and verify claims."""
-    return oauth2.validate_access_token(token, claims)
+def read_doctor_processed_data(question_detail_link) -> list[str]:
+    """Read doctor processed data."""
+    return document_db.read_doctor_processed_data(question_detail_link)
+
+
+# endregion
 
 
 def init() -> None:
@@ -71,10 +182,15 @@ def init() -> None:
         "SYMPTOMS_SEQUENCE_MAXLEN", default=config.SYMPTOMS_SEQUENCE_MAXLEN
     )
     config.MONGODB_URL = os.environ.get("MONGODB_URL", default=config.MONGODB_URL)
-    config.WEB_REQUEST_TIMEOUT = os.environ.get(
-        "WEB_REQUEST_TIMEOUT", default=config.WEB_REQUEST_TIMEOUT
+    config.MONGODB_DATABASE = os.environ.get(
+        "MONGODB_DATABASE", default=config.MONGODB_DATABASE
     )
-    config.CACHE_TIMEOUT = os.environ.get("CACHE_TIMEOUT", default=config.CACHE_TIMEOUT)
+    config.WEB_REQUEST_TIMEOUT_SECONDS = os.environ.get(
+        "WEB_REQUEST_TIMEOUT_SECONDS", default=config.WEB_REQUEST_TIMEOUT_SECONDS
+    )
+    config.CACHE_TIMEOUT_SECONDS = os.environ.get(
+        "CACHE_TIMEOUT_SECONDS", default=config.CACHE_TIMEOUT_SECONDS
+    )
     config.TENANT_DOMAIN = os.environ.get("TENANT_DOMAIN", default=config.TENANT_DOMAIN)
     config.TENANT_OPENID_CONFIGURATION_CACHE_KEY = os.environ.get(
         "TENANT_OPENID_CONFIGURATION_CACHE_KEY",
@@ -92,7 +208,7 @@ def init() -> None:
 
     machine_learning.configure()
     document_db.configure_mongodb_client()
-    # mongodb.log_mongodb_status()
+    # document_db.log_mongodb_status()
     oauth2.init_cache_state()
 
 

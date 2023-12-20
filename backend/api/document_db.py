@@ -5,7 +5,6 @@ import re
 from dataclasses import dataclass
 
 from bson import json_util
-from bson.objectid import ObjectId
 from pymongo import MongoClient
 from structlog import get_logger
 
@@ -31,112 +30,293 @@ def configure_mongodb_client() -> None:
 
 
 def log_mongodb_status() -> None:
-    """Log mongodb status."""
+    """Log mongodb status in debug mode."""
     logger = get_logger()
 
-    logger.info("Starting log mongodb status")
+    logger.info("Starting log mongodb status in DEBUG mode")
     server_status_result = State.MONGODB_CLIENT.user.command("serverStatus")
-    logger.info(server_status_result)
-    logger.info("Completed log mongodb status")
+    logger.debug(server_status_result)
+    logger.info("Completed log mongodb status in DEBUG mode")
+
+
+# region symptoms to causes
+
+
+def get_user(email_address) -> str:
+    """Get user."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting get user",
+    )
+    result = None
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    for document in database.users.find({"email_address": email_address}):
+        result = _clean_document(document)
+    logger.info(
+        "Completed get user",
+    )
+
+    return result
+
+
+def upsert_user(user: dict) -> None:
+    """Upsert user."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting upsert user",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    database.users.find_one_and_replace(
+        {
+            "email_address": user["email_address"],
+        },
+        {
+            "email_address": user["email_address"],
+            "login_sub": None
+            if "login_sub" not in user
+            or user["login_sub"] is None
+            or user["login_sub"].strip() == ""
+            else user["login_sub"],
+            "user_type": None
+            if "user_type" not in user
+            or user["user_type"] is None
+            or user["user_type"].strip() == ""
+            else user["user_type"],
+            "name": None
+            if "name" not in user or user["name"] is None or user["name"].strip() == ""
+            else user["name"],
+            "picture_url": None
+            if "picture_url" not in user
+            or user["picture_url"] is None
+            or user["picture_url"].strip() == ""
+            else user["picture_url"],
+            "profile_url": None
+            if "profile_url" not in user
+            or user["profile_url"] is None
+            or user["profile_url"].strip() == ""
+            else user["profile_url"],
+            "remarks": None
+            if "remarks" not in user
+            or user["remarks"] is None
+            or user["remarks"].strip() == ""
+            else user["last_logged_in"],
+            "last_logged_in": None
+            if "last_logged_in" not in user
+            else user["last_logged_in"],
+        },
+    )
+    logger.info(
+        "Completed upsert user",
+    )
 
 
 def read_all_subjective_symptoms() -> list[str]:
     """Read all subjective symptoms."""
     logger = get_logger()
 
-    logger.info("Starting read all subjective symptoms")
-    database = State.MONGODB_CLIENT.ai_hospital_services
+    logger.info(
+        "Starting read all subjective symptoms",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
     result = []
     for document in database.subjective_symptoms.find({}):
-        document = json_util.dumps(document)
-        document = _replace_oid(document)
-        result.append(json.loads(document))
-    logger.info("Completed read all subjective symptoms")
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read all subjective symptoms",
+    )
 
     return result
 
 
-def read_all_objective_symptoms() -> list[str]:
-    """Read all objective symptoms."""
-    logger = get_logger()
-
-    logger.info("Starting read all objective symptoms")
-    database = State.MONGODB_CLIENT.ai_hospital_services
-    result = []
-    for document in database.objective_symptoms.find({}):
-        document = json_util.dumps(document)
-        document = _replace_oid(document)
-        result.append(json.loads(document))
-
-    logger.info("Completed read all objective symptoms")
-
-    return result
-
-
-def read_all_etiologies() -> list[str]:
-    """Read all etiologies data."""
-    logger = get_logger()
-
-    logger.info("Starting read all etiologies")
-    database = State.MONGODB_CLIENT.ai_hospital_services
-    result = []
-    for document in database.etiologies.find({}):
-        document = json_util.dumps(document)
-        document = _replace_oid(document)
-        result.append(json.loads(document))
-
-    logger.info("Completed read all etiologies")
-
-    return result
-
-
-def read_etiology(subjective_symptom_id, cause) -> str:
-    """Read etiology data by subjective symptom and cause."""
+def read_all_associated_symptoms() -> list[str]:
+    """Read all associated symptoms."""
     logger = get_logger()
 
     logger.info(
-        "Starting read etiology by symptom and cause",
-        subjective_symptom_id=subjective_symptom_id,
-        cause=cause,
+        "Starting read all associated symptoms",
     )
-    database = State.MONGODB_CLIENT.ai_hospital_services
-    document = database.etiologies.find_one(
-        {
-            "subjective_symptom_id": ObjectId(subjective_symptom_id),
-            "cause": str(cause).lower(),
-        }
-    )
-    document = json_util.dumps(document) if document is not None else None
-    document = _replace_oid(document) if document is not None else None
-    document = json.loads(document) if document is not None else None
-    logger.info(
-        "Completed read etiology by symptom and cause",
-        subjective_symptom=subjective_symptom_id,
-        cause=cause,
-    )
-
-    return str(document) if document is not None else None
-
-
-def read_drugs(etiology_id) -> list[str]:
-    """Read drugs data by etiology."""
-    logger = get_logger()
-
-    logger.info("Starting read drugs by etiology", etiology_id=etiology_id)
-    database = State.MONGODB_CLIENT.ai_hospital_services
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
     result = []
-    for document in database.drugs.find({"etiology_id": ObjectId(etiology_id)}):
-        document = json_util.dumps(document)
-        document = _replace_oid(document)
-        result.append(json.loads(document))
-    logger.info("Completed read drugs by etiology", etiology_id=etiology_id)
+    for document in database.associated_symptoms.find({}):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read all associated symptoms",
+    )
 
     return result
+
+
+def read_all_gender() -> list[str]:
+    """Read all gender values."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read all gender values",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.gender.find({}):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read all gender values",
+    )
+
+    return result
+
+
+def read_all_age_groups() -> list[str]:
+    """Read all age groups."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read all age groups",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.age_groups.find({}):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read all age groups",
+    )
+
+    return result
+
+
+def read_all_investigations() -> list[str]:
+    """Read all investigations."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read all investigations",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.investigations.find({}):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read all investigations",
+    )
+
+    return result
+
+
+def read_advises(provisional_diagnosis) -> list[str]:
+    """Read advised investigations, management and surgical management."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read advised investigations, management and surgical management",
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.provisional_diagnosis_advises.find(
+        {"provisional_diagnosis": provisional_diagnosis}
+    ):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read advised investigations, management and surgical management",
+    )
+
+    return result
+
+
+# endregion
+
+# region data scrapper
+
+
+def read_doctor_raw_data_links(profile_link) -> list[str]:
+    """Read doctor raw data links."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read doctor raw data links by profile link",
+        profile_link=profile_link,
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.doctor_raw_data.find(
+        {"doctor_profile_link": profile_link},
+        {"_id": True, "question_detail_link": True},
+    ):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read doctor raw data links by profile link",
+        profile_link=profile_link,
+    )
+
+    return result
+
+
+def read_doctor_raw_data(question_detail_link) -> list[str]:
+    """Read doctor raw data."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read doctor raw data by question detail link",
+        question_detail_link=question_detail_link,
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.doctor_raw_data.find(
+        {"question_detail_link": question_detail_link},
+    ):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read doctor raw data links by question detail link",
+        question_detail_link=question_detail_link,
+    )
+
+    return result
+
+
+def read_doctor_processed_data(question_detail_link) -> list[str]:
+    """Read doctor processed data."""
+    logger = get_logger()
+
+    logger.info(
+        "Starting read doctor processed data by question detail link",
+        question_detail_link=question_detail_link,
+    )
+    database = State.MONGODB_CLIENT[config.MONGODB_DATABASE]
+    result = []
+    for document in database.doctor_processed_data.find(
+        {"question_detail_link": question_detail_link},
+    ):
+        result.append(_clean_document(document))
+    logger.info(
+        "Completed read doctor processed data links by question detail link",
+        question_detail_link=question_detail_link,
+    )
+
+    return result
+
+
+# endregion
+
+
+def _clean_document(document):
+    document = json_util.dumps(document)
+    document = _replace_oid(document)
+    document = _replace_date(document)
+    return json.loads(document)
 
 
 def _replace_oid(string):
     while True:
         pattern = re.compile(r'{\s*"\$oid":\s*("[a-z0-9]{1,}")\s*}')
+        match = re.search(pattern, string)
+        if match:
+            string = string.replace(match.group(0), match.group(1))
+        else:
+            return string
+
+
+def _replace_date(string):
+    while True:
+        pattern = re.compile(r'{\s*"\$date":\s*("[TZ0-9-:.]{1,}")\s*}')
         match = re.search(pattern, string)
         if match:
             string = string.replace(match.group(0), match.group(1))

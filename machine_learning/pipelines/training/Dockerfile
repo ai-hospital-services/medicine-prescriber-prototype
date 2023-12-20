@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 python:3.9.14-slim-buster
+FROM --platform=linux/amd64 python:3.10.9-slim-buster
 
 WORKDIR /
 COPY requirements.txt .
